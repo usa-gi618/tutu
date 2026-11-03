@@ -224,21 +224,156 @@
   pointer-events: none;
 }
 
-/* 마스코트 버튼 */
-.screen-player .mascot {
+/* ---- 말풍선 캐릭터 · 질문하기 ---- */
+/* 작은 말풍선 (오른쪽 아래, 영상 내내 보임). 질문하면 같은 요소가 큰 답변 말풍선(Figma 11734:2041)으로 커진다 */
+.screen-player .ask-bubble {
   position: absolute;
   right: 24px;
   bottom: 28px;
   width: 109px;
   height: 60px;
+  border-radius: 30px 0 22px 30px; /* 오른쪽 위만 각진 말풍선 */
+  background: #111;
+  overflow: hidden;
+  z-index: 5;
+  transition:
+    width 0.55s cubic-bezier(0.2, 0.8, 0.2, 1),
+    height 0.55s cubic-bezier(0.2, 0.8, 0.2, 1),
+    right 0.55s cubic-bezier(0.2, 0.8, 0.2, 1),
+    bottom 0.55s cubic-bezier(0.2, 0.8, 0.2, 1),
+    border-radius 0.55s ease;
 }
-.screen-player .mascot .face {
+.screen-player .ask-face {
   position: absolute;
   left: 38px;
-  top: 7px;
+  bottom: 13px;
   width: 38px;
   height: 40px;
   transform: rotate(90deg); /* Figma에서 세로 기준으로 그려진 아이콘 */
+  transition: left 0.55s cubic-bezier(0.2, 0.8, 0.2, 1), bottom 0.55s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.screen-player .answering .ask-bubble {
+  right: 110px;
+  bottom: 105px;
+  width: calc(100% - 220px);
+  height: calc(100% - 210px);
+  border-radius: 32px 0 32px 32px;
+}
+.screen-player .answering .ask-face { left: 22px; bottom: 18px; }
+
+/* 답변 내용: 말풍선이 다 커진 뒤 나타난다 */
+.screen-player .ask-answer {
+  position: absolute;
+  inset: 0;
+  padding: 22px 40px 0;
+  color: #fff;
+  text-align: left;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.screen-player .answering .ask-answer { opacity: 1; transition: opacity 0.35s ease 0.45s; }
+.screen-player .ask-question { font-size: 16px; font-weight: 700; letter-spacing: -0.3px; white-space: nowrap; }
+.screen-player .ask-steps {
+  margin-top: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+.screen-player .ask-step {
+  min-width: 96px;
+  padding: 12px 14px;
+  border: 1.5px dashed rgba(255, 255, 255, 0.8);
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.screen-player .ask-step b { font-size: 17px; font-weight: 700; white-space: nowrap; }
+.screen-player .ask-step span { font-size: 11px; font-weight: 600; color: rgba(255, 255, 255, 0.7); white-space: nowrap; }
+.screen-player .ask-arrow { font-size: 15px; font-weight: 700; }
+.screen-player .ask-result { margin-left: 4px; font-size: 22px; font-weight: 700; white-space: nowrap; }
+.screen-player .ask-reply {
+  position: absolute;
+  left: 80px;
+  right: 40px;
+  bottom: 26px;
+  min-height: 18px;
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1.45;
+  text-align: center;
+}
+
+/* 질문 중: 영상이 흐려지고 어두워진다 */
+.screen-player .ask-dim {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  background: rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.screen-player .asking .ask-dim { opacity: 1; }
+/* 영상(과 Recap) 자체를 흐리게 (회전된 화면에서는 backdrop-filter가 일부만 걸려서) */
+.screen-player .video,
+.screen-player .recap { transition: filter 0.3s ease; }
+.screen-player .asking .video,
+.screen-player .asking .recap { filter: blur(7px); }
+
+/* 듣는 중: 화면 아래 가운데 마이크 + 위에 학생 말 (초록 자막) */
+.screen-player .ask-listen {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 34px;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  opacity: 0;
+  transform: translateY(10px);
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.screen-player .listening .ask-listen { opacity: 1; transform: none; pointer-events: auto; }
+.screen-player .ask-transcript {
+  height: 28px;
+  padding: 0 14px;
+  border-radius: 14px;
+  background: #55df94;
+  color: #000;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 28px;
+  white-space: nowrap;
+  visibility: hidden;
+}
+.screen-player .ask-transcript.show { visibility: visible; }
+.screen-player .ask-mic {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: #111;
+  box-shadow: 0 0 0 4px #55df94;
+}
+.screen-player .ask-mic svg { position: absolute; left: 0; top: 0; }
+/* 듣는 중 퍼지는 고리 */
+.screen-player .ask-mic::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 3px solid #55df94;
+  animation: ask-pulse 1.4s ease-out infinite;
+}
+@keyframes ask-pulse {
+  from { transform: scale(1); opacity: 0.9; }
+  to { transform: scale(1.6); opacity: 0; }
 }
 
 /* ---- 영상 마지막 Recap (Figma 11657:2163) ---- */
@@ -324,6 +459,7 @@
 .screen-player .finish {
   position: absolute;
   inset: 0;
+  z-index: 6; /* 말풍선 캐릭터보다 위 (종료 화면에서는 캐릭터 없음) */
   padding-bottom: 40px;
   background: #f5f5f5;
   color: #000;

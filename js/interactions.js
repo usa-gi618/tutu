@@ -62,9 +62,23 @@ function splitLayer(data, scene, layerName, groups, name) {
   list.splice(i, 0, part);
 }
 
+// 레이어의 도형 묶음(groups) 색 바꾸기: { fill: [r,g,b], stroke: [r,g,b], strokeWidth } (0~255)
+function restyle(data, scene, { layer, groups, fill, stroke, strokeWidth }) {
+  const { layer: l } = findLayer(data, scene, layer);
+  const rgba = (c) => [...c.map((v) => v / 255), 1];
+  const walk = (items) => items.forEach((x) => {
+    if (x.ty === 'gr') return walk(x.it);
+    if (x.ty === 'fl' && fill) x.c = { a: 0, k: rgba(fill) };
+    if (x.ty === 'st' && stroke) x.c = { a: 0, k: rgba(stroke) };
+    if (x.ty === 'st' && strokeWidth !== undefined) x.w = { a: 0, k: strokeWidth };
+  });
+  groups.forEach((g) => walk([l.shapes[g]]));
+}
+
 export function prepare(data, interactions = []) {
   for (const it of interactions) {
     if (it.freeze) freezeFrom(findLayer(data, it.scene, it.freeze.layer).layer, it.freeze.from);
+    for (const r of it.restyle ?? []) restyle(data, it.scene, r);
     for (const s of it.split ?? []) splitLayer(data, it.scene, s.layer, s.groups, s.as);
     for (const name of it.hide ?? []) findLayer(data, it.scene, name).layer.hd = true; // 숨길 레이어
   }
@@ -272,26 +286,40 @@ export function create(it, svg, toSvg, done) {
       on: it.start[i],
     }));
 
-    // "no light / no water / no CO₂" 표시
+    // "no light / no water / no CO₂" 표시: 검은 글자만. 켜진 조건은 회색 + 취소선
     const box = find(it.box);
-    const chips = svgEl('g', { class: 'tutu-chips', style: 'transition: opacity .2s' });
+    const chips = svgEl('g', { class: 'tutu-chips' });
     rows.forEach((r, i) => {
-      const g = svgEl('g', { transform: `translate(${it.chips.x + i * 60} ${it.chips.y})`, style: 'transition: opacity .25s' });
-      g.append(svgEl('rect', { width: 56, height: 22, rx: 11, fill: 'rgb(220,220,220)' }));
-      const t = svgEl('text', { x: 28, y: 14.5, 'text-anchor': 'middle', fill: 'rgb(110,110,110)', 'font-size': 10, 'font-weight': 500, 'font-family': '-apple-system, BlinkMacSystemFont, sans-serif' });
+      const g = svgEl('g', { transform: `translate(${it.chips.x} ${it.chips.y})` });
+      const t = svgEl('text', { x: 0, y: 0, fill: '#000', 'font-size': 11, 'font-weight': 600, 'font-family': '-apple-system, BlinkMacSystemFont, sans-serif' });
       t.textContent = `no ${it.labels[i]}`;
-      g.append(t);
+      const strike = svgEl('line', { y1: -3.5, y2: -3.5, x1: -1, stroke: 'rgb(171,171,171)', 'stroke-width': 1.5, style: 'display:none' });
+      g.append(t, strike);
       chips.append(g);
-      r.chip = g;
+      r.chip = { g, t, strike };
     });
     box.append(chips);
+    // 글자 폭을 재서 한 줄로 늘어놓는다 (화면에 그려진 뒤에만 잴 수 있음)
+    let laidOut = false;
+    const layoutChips = () => {
+      let x = it.chips.x;
+      for (const r of rows) {
+        const w = r.chip.t.getComputedTextLength();
+        if (!w) return;
+        r.chip.g.setAttribute('transform', `translate(${x} ${it.chips.y})`);
+        r.chip.strike.setAttribute('x2', w + 1);
+        x += w + 12;
+      }
+      laidOut = true;
+    };
 
     const draw = (r) => {
       recolor(r.track, { fill: [[C.black, r.on ? C.green : C.grey220], [C.grey220, r.on ? C.green : C.grey220]] });
       recolor(r.row, { fill: [[C.black, r.on ? C.black : C.grey110], [C.grey110, r.on ? C.black : C.grey110]] });
       const shift = r.on === r.original ? 0 : (r.on ? it.travel : -it.travel);
       r.knob.setAttribute('transform', `translate(${shift} 0)`);
-      r.chip.style.opacity = r.on ? 0 : 1;
+      r.chip.t.setAttribute('fill', r.on ? 'rgb(171,171,171)' : '#000');
+      r.chip.strike.style.display = r.on ? '' : 'none';
     };
     rows.forEach(draw);
 
@@ -327,7 +355,8 @@ export function create(it, svg, toSvg, done) {
       onFrame(f) {
         // Lottie는 장면이 화면에 나올 때 원래 색을 칠한다 → 그 뒤에 매번 지금 상태로 다시 칠한다
         rows.forEach(draw);
-        chips.style.opacity = f >= it.at - 15 ? 1 : 0;
+        chips.style.display = f >= it.at - 15 ? '' : 'none';
+        if (!laidOut && f >= it.at - 15) layoutChips();
         setGrowth(finished ? f : it.at);
       },
       tap(e) {

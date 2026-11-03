@@ -26,7 +26,15 @@ export const TODAY = [
     checks: 1,
     interactions: [
       // 01 예측: Soil / Water / Air 중 하나 고르기 (원래 영상은 Soil을 자동으로 강조 → 지움)
-      { type: 'pick', scene: '01_predict', at: 197, options: ['choice-soil', 'choice-water', 'choice-air'], badge: 'My prediction', freeze: { layer: 'choice-soil', from: 200 } },
+      {
+        type: 'pick', scene: '01_predict', at: 197, options: ['choice-soil', 'choice-water', 'choice-air'], badge: 'My prediction',
+        freeze: { layer: 'choice-soil', from: 200 },
+        // 고르기 전에는 세 카드 모두 회색: 영상 속 Soil은 아이콘이 검정 + 검은 테두리라 Water·Air와 맞춘다
+        restyle: [
+          { layer: 'choice-soil', groups: [5], fill: [220, 220, 220], stroke: [171, 171, 171] },
+          { layer: 'choice-soil', groups: [9], strokeWidth: 0 },
+        ],
+      },
       // 02 무게 재기: 화분+묘목(drop-zone의 도형 1~3)을 저울 위로 끌어다 놓기
       { type: 'drag', scene: '02_step1_weigh', at: 352, split: [{ layer: 'drop-zone', groups: [1, 2, 3], as: 'drag-item' }], item: 'drag-item', target: 'scale' },
       // 03 5년 흐르게 하기: 슬라이더 손잡이를 끝(5 yrs)까지 끌면 5년 나무가 자란다
@@ -49,12 +57,23 @@ export const TODAY = [
         hide: ['no-co2-tag', 'graph-no-co2', 'conclusion', 'caption 2'],
         toggles: ['toggle-0', 'toggle-1', 'toggle-2'], labels: ['light', 'water', 'CO₂'],
         original: [true, true, false], start: [false, false, false], goal: [true, true, true], travel: 20,
-        box: 'sealed-box', chips: { x: 276, y: 152 }, tree: 'box-tree', growFrames: 90, // 3초 동안 자란다
+        box: 'sealed-box', chips: { x: 280, y: 168 }, tree: 'box-tree', growFrames: 90, // 3초 동안 자란다
         grow: { x: 362, ground: 292, stem: [26, 60], r: [13, 32] }, // 줄기 길이·잎 반지름 (영상 속 원래 나무 26 / 13)
       },
       // 07 확인 문제
       { type: 'answer', scene: '07_check', at: 1616, split: checkOptions(), options: ['option-1', 'option-2', 'option-3'], answer: 'option-2' },
     ],
+    // 말풍선 캐릭터에게 질문하기 (프로토타입용 질문·답변 한 쌍)
+    ask: {
+      question: 'So how does air turn into the wood of a tree?',
+      steps: [
+        { top: 'CO₂', bottom: 'from the air' },
+        { top: 'light + water', bottom: 'in the leaf' },
+        { top: 'glucose', bottom: 'a kind of sugar' },
+      ],
+      result: '= wood',
+      answer: '“Leaves take in CO₂ from the air. Light turns it and water into glucose, and glucose builds the wood.”',
+    },
     // 영상 마지막 Recap (Figma 11657:2163). 영상 뒤에 seconds 동안 이어서 나온다
     recap: {
       seconds: 6,

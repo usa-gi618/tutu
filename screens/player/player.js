@@ -6,6 +6,9 @@
 //   재생바 드래그 : 원하는 위치로 이동
 //   영상 속 인터랙션(고르기, 끌어다 놓기, 마이크) 지점에 오면 멈추고, 학생이 조작을 끝내면 이어서 재생
 //   Lottie가 끝나면 Recap(있으면, Figma 11657:2163)이 이어서 나오고, 끝나면 종료 화면(Figma 11658:5370)
+//   말풍선 캐릭터(오른쪽 아래, 영상 내내 보임): 누르면 영상이 멈추고 배경이 흐려지며 마이크가 뜬다.
+//     학생이 말하는 문장이 초록 자막으로 나오고(음성 인식 흉내), 끝나면 캐릭터가 큰 말풍선으로 커지며 AI 답변 (Figma 11734:2041)
+//     답변 화면을 탭하면 다시 작아지고 영상이 이어진다. 질문·답변은 강의 데이터의 ask (지금은 생물만)
 /* global lottie */
 import { TODAY } from '../../data/lectures.js';
 import { state } from '../../js/state.js';
@@ -50,6 +53,23 @@ function recapHtml(recap) {
     </div>`;
 }
 
+// 말풍선 캐릭터 = 작은 말풍선 버튼. 질문하면 이 요소가 그대로 커져서 AI 답변 말풍선이 된다.
+function askHtml(ask) {
+  return `
+    <button class="ask-bubble" type="button" aria-label="Ask a question">
+      ${ask ? `
+        <div class="ask-answer">
+          <p class="ask-question">“${ask.question}”</p>
+          <div class="ask-steps">
+            ${ask.steps.map((s, i) => `${i ? '<span class="ask-arrow">→</span>' : ''}<div class="ask-step"><b>${s.top}</b><span>${s.bottom}</span></div>`).join('')}
+            <span class="ask-result">${ask.result}</span>
+          </div>
+          <p class="ask-reply"></p>
+        </div>` : ''}
+      <img class="ask-face" src="assets/player-mascot.svg" alt="" />
+    </button>`;
+}
+
 const clock = (sec) => `${Math.floor(sec / 60)}:${String(Math.floor(sec % 60)).padStart(2, '0')}`;
 
 export default {
@@ -81,12 +101,19 @@ export default {
           <button class="toggle glass" type="button" aria-label="Play / Pause">${ICON_PAUSE}</button>
           <div class="time glass"><span>0:00 / 0:00</span></div>
           <div class="progress"><div class="bar"></div><div class="head"></div></div>
+        </div>
 
-          <button class="mascot" type="button" aria-label="Ask">
-            <img class="fill" src="assets/player-mascot-bubble.svg" alt="" />
-            <img class="face" src="assets/player-mascot.svg" alt="" />
+        <div class="ask-dim"></div>
+        <div class="ask-listen">
+          <p class="ask-transcript"></p>
+          <button class="ask-mic" type="button" aria-label="Done talking">
+            <svg width="60" height="60" viewBox="0 0 60 60" fill="none">
+              <rect x="25" y="16" width="10" height="18" rx="5" fill="#fff" />
+              <path d="M20 28 a10 10 0 0 0 20 0 M30 38 v6 M25 44 h10" stroke="#fff" stroke-width="2.4" stroke-linecap="round" />
+            </svg>
           </button>
         </div>
+        ${askHtml(l.ask)}
 
         <div class="finish">
           <img class="finish-mark" src="assets/finish-mark.svg" alt="" />
@@ -120,6 +147,14 @@ export default {
     let scenes = [];
     let segments = [];
     const recapEl = el.querySelector('.recap');
+    // 질문하기: idle → listening(마이크) → answering(큰 말풍선) → idle
+    let ask = 'idle';
+    let askTimers = [];
+    let askWasPlaying = false;
+    let askClosedAt = 0;
+    const bubble = el.querySelector('.ask-bubble');
+    const transcript = el.querySelector('.ask-transcript');
+    const reply = el.querySelector('.ask-reply');
     const finishEl = el.querySelector('.finish');
     let frame = 0;
     let playing = false;
@@ -340,6 +375,11 @@ export default {
     let gesture = null;
     land.addEventListener('pointerdown', (e) => {
       if (!lesson || finishEl.classList.contains('show')) return; // 종료 화면에서는 버튼만
+      if (ask !== 'idle') {
+        // 답변 화면에서 탭하면 닫고 영상 이어서
+        if (ask === 'answering') closeAsk();
+        return;
+      }
       land.setPointerCapture(e.pointerId);
       clearTimeout(hideTimer); // 만지는 동안은 숨기지 않는다
 
@@ -433,9 +473,52 @@ export default {
       // TODO: 스페인어 음성/자막이 생기면 전환
       el.querySelector('.lang-thumb').classList.toggle('es', b.dataset.lang === 'es');
     }));
-    el.querySelector('.mascot').addEventListener('click', () => {
-      // TODO: 마스코트 기능
+    // ---- 질문하기 ----
+    const later = (fn, ms) => askTimers.push(setTimeout(fn, ms));
+    function startAsk() {
+      if (!lecture.ask || ask !== 'idle' || awaiting) return;
+      ask = 'listening';
+      askWasPlaying = playing;
+      endHold();
+      pause();
+      controls.classList.remove('show');
+      land.classList.add('asking', 'listening');
+      // 음성 인식 흉내: 질문 문장이 단어 단위로 나타난다
+      const words = lecture.ask.question.split(' ');
+      transcript.textContent = '';
+      words.forEach((w, i) => later(() => {
+        transcript.textContent = words.slice(0, i + 1).join(' ');
+        transcript.classList.add('show');
+      }, 700 + i * 280));
+      later(answer, 700 + words.length * 280 + 900);
+    }
+    function answer() {
+      if (ask !== 'listening') return;
+      askTimers.forEach(clearTimeout);
+      askTimers = [];
+      transcript.textContent = lecture.ask.question;
+      ask = 'answering';
+      land.classList.remove('listening');
+      land.classList.add('answering');
+      // 답변은 단어 단위로 출력
+      const words = lecture.ask.answer.split(' ');
+      reply.textContent = '';
+      words.forEach((w, i) => later(() => { reply.textContent = words.slice(0, i + 1).join(' '); }, 900 + i * 90));
+    }
+    function closeAsk() {
+      askTimers.forEach(clearTimeout);
+      askTimers = [];
+      ask = 'idle';
+      askClosedAt = performance.now();
+      land.classList.remove('asking', 'listening', 'answering');
+      transcript.classList.remove('show');
+      if (askWasPlaying) play();
+    }
+    bubble.addEventListener('click', () => {
+      // 답변을 닫은 바로 그 탭으로 다시 열리지 않게
+      if (ask === 'idle' && performance.now() - askClosedAt > 400) startAsk();
     });
+    el.querySelector('.ask-mic').addEventListener('click', answer); // 말 끝 → 바로 보내기
 
     loadLesson(lecture).then((l) => {
       if (disposed) return;
@@ -483,6 +566,7 @@ export default {
       disposed = true;
       cancelAnimationFrame(raf);
       clearTimeout(hideTimer);
+      askTimers.forEach(clearTimeout);
       anim?.destroy();
     };
   },
