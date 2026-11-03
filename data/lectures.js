@@ -49,7 +49,8 @@ export const TODAY = [
         hide: ['no-co2-tag', 'graph-no-co2', 'conclusion', 'caption 2'],
         toggles: ['toggle-0', 'toggle-1', 'toggle-2'], labels: ['light', 'water', 'CO₂'],
         original: [true, true, false], start: [false, false, false], goal: [true, true, true], travel: 20,
-        box: 'sealed-box', chips: { x: 276, y: 152 }, tree: 'box-tree', growTo: 1.9, growFrames: 90, // 3초 동안 1.9배까지
+        box: 'sealed-box', chips: { x: 276, y: 152 }, tree: 'box-tree', growFrames: 90, // 3초 동안 자란다
+        grow: { x: 362, ground: 292, stem: [26, 60], r: [13, 32] }, // 줄기 길이·잎 반지름 (영상 속 원래 나무 26 / 13)
       },
       // 07 확인 문제
       { type: 'answer', scene: '07_check', at: 1616, split: checkOptions(), options: ['option-1', 'option-2', 'option-3'], answer: 'option-2' },

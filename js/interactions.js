@@ -295,16 +295,29 @@ export function create(it, svg, toSvg, done) {
     };
     rows.forEach(draw);
 
-    // 나무가 점점 자라기: 완료 후 영상이 재생되는 만큼(growFrames 동안) 바닥을 기준으로 커진다
-    // 영상 위치에 맞추므로 멈추면 멈추고, 되감으면 다시 작아진다
-    const tree = wrap(find(it.tree));
-    let base = null; // { cx, by } 나무 바닥 가운데
+    // 나무가 점점 자라기: 완료 후 영상이 재생되는 만큼(growFrames 동안) 줄기가 길어지고 잎(원)이 커진다.
+    // 그림을 확대하지 않고 도형을 다시 그린다 (선 굵기는 그대로). 영상 위치에 맞추므로 멈추면 멈추고 되감으면 작아진다.
+    // 자라기 시작하면 영상 속 원래 나무는 숨기고 같은 모양의 벡터 나무로 바꾼다.
+    const original = wrap(find(it.tree));
+    const g = it.grow; // { x, ground, stem: [from, to], r: [from, to] }
+    const stem = svgEl('line', { x1: g.x, x2: g.x, y1: g.ground, stroke: '#000', 'stroke-width': 4, 'stroke-linecap': 'round' });
+    const leaf = svgEl('circle', { cx: g.x, fill: 'rgb(85,223,148)', stroke: '#000', 'stroke-width': 3 });
+    const vectorTree = svgEl('g', { class: 'tutu-tree', style: 'display:none' });
+    vectorTree.append(stem, leaf);
+    box.append(vectorTree);
     const setGrowth = (f) => {
       const p = Math.max(0, Math.min(1, (f - it.at) / it.growFrames));
-      if (p === 0) return tree.removeAttribute('transform');
-      base ??= (() => { const b = tree.getBBox(); return { cx: b.x + b.width / 2, by: b.y + b.height }; })();
-      const sc = 1 + (it.growTo - 1) * p * p * (3 - 2 * p);
-      tree.setAttribute('transform', `translate(${base.cx} ${base.by}) scale(${sc}) translate(${-base.cx} ${-base.by})`);
+      const grown = p > 0;
+      original.style.display = grown ? 'none' : '';
+      vectorTree.style.display = grown ? '' : 'none';
+      if (!grown) return;
+      const e = p * p * (3 - 2 * p);
+      const len = g.stem[0] + (g.stem[1] - g.stem[0]) * e;
+      const r = g.r[0] + (g.r[1] - g.r[0]) * e;
+      const top = g.ground - len;
+      stem.setAttribute('y2', top);
+      leaf.setAttribute('cy', top - r + 2); // 원래처럼 잎이 줄기 끝을 살짝 덮는다
+      leaf.setAttribute('r', r);
     };
 
     let finished = false;
@@ -312,6 +325,8 @@ export function create(it, svg, toSvg, done) {
       at: it.at,
       // 상자가 나타나기 전에는 표시를 숨긴다
       onFrame(f) {
+        // Lottie는 장면이 화면에 나올 때 원래 색을 칠한다 → 그 뒤에 매번 지금 상태로 다시 칠한다
+        rows.forEach(draw);
         chips.style.opacity = f >= it.at - 15 ? 1 : 0;
         setGrowth(finished ? f : it.at);
       },
@@ -329,7 +344,7 @@ export function create(it, svg, toSvg, done) {
       },
       reset() {
         finished = false;
-        tree.removeAttribute('transform');
+        setGrowth(it.at);
         rows.forEach((r, i) => { r.on = it.start[i]; draw(r); });
       },
     };
