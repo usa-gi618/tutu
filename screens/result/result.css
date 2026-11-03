@@ -14,19 +14,14 @@
 }
 .screen-result .scroll::-webkit-scrollbar { display: none; }
 
-/* 제목 + 왼쪽 뒤로 가기(<) */
-.screen-result .title-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 4px;
-  margin-left: -6px; /* < 아이콘의 여백만큼 당겨서 제목 왼쪽 줄을 맞춘다 */
-}
-.screen-result .back {
-  flex: none;
-  width: 24px;
-  height: 57.6px; /* 제목 첫 줄 높이에 가운데 */
-  display: flex;
-  align-items: center;
+/* 오른쪽 위 홈 버튼 (라이브러리와 같은 자리) */
+.screen-result .home-btn {
+  position: absolute;
+  right: 26px;
+  top: 75px;
+  width: 39px;
+  height: 39px;
+  z-index: 2;
 }
 .screen-result .heading {
   font-size: 48px;

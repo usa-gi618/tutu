@@ -43,17 +43,11 @@ export default {
 
     return `
       <div class="scroll">
-        <div class="title-row">
-          <button class="back" type="button" aria-label="Back to home">
-            <svg width="24" height="36" viewBox="0 0 24 36" fill="none">
-              <path d="M17 7 L6 18 L17 29" stroke="#000" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
-          </button>
-          <h1 class="heading">${heading}</h1>
-        </div>
+        <h1 class="heading">${heading}</h1>
         ${section(passed, 'pass')}
         ${section(review, 'review')}
       </div>
+      <button class="home-btn" type="button" aria-label="Home"><img class="fill" src="assets/icon-home.svg" alt="" /></button>
       <div class="fade"></div>
       <button class="cta" type="button" disabled>Watch the Video</button>
     `;
@@ -78,7 +72,7 @@ export default {
       select(index === selected ? -1 : index);
     });
 
-    el.querySelector('.back').addEventListener('click', () => go('home', { transition: 'pop' }));
+    el.querySelector('.home-btn').addEventListener('click', () => go('home', { transition: 'pop' }));
 
     cta.addEventListener('click', () => {
       if (selected === -1) return;

@@ -1,22 +1,18 @@
 // Figma 11540:2496 (영상 + 제어 화면, 가로)
-// 강의 영상(Lottie)을 조각(마커 한 문장) 단위로 재생한다.
-//   탭        : 다음 조각으로 넘어가 재생 (조각이 끝나면 멈춰서 다음 탭을 기다림)
-//   꾹 누르기  : 연속 재생. 조각이 끝나도 다음 조각으로 이어서 재생 (탭하면 다시 한 조각씩)
-//   위/아래 스와이프 : 제어 화면 보이기 / 숨기기
+// 강의 영상(Lottie)을 일반 영상처럼 끝까지 이어서 재생한다.
+//   탭        : 지금 장면 조각(마커 한 문장)을 건너뛰고 다음 조각부터 재생
+//   위/아래 스와이프 : 제어 화면 보이기 / 숨기기. 재생 중 3초 동안 조작이 없으면 저절로 숨는다 (유튜브처럼)
 //   재생바 드래그 : 원하는 위치로 이동
-//   영상 속 인터랙션(카드 고르기, 끌어다 놓기) 지점에 오면 멈추고, 학생이 조작을 끝내면 이어서 재생
+//   영상 속 인터랙션(고르기, 끌어다 놓기, 마이크) 지점에 오면 멈추고, 학생이 조작을 끝내면 이어서 재생
 /* global lottie */
 import { TODAY } from '../../data/lectures.js';
 import { state } from '../../js/state.js';
 import { loadLesson } from '../../js/lessons.js';
 import { create as createInteraction } from '../../js/interactions.js';
 
-const HOLD_MS = 400;
 const SWIPE_PX = 40;
 const MOVE_SLOP = 10;
-// Lottie 자막이 다음 마커보다 조금 앞서 바뀌기 시작해서, 한 조각만 재생할 때는 그만큼 앞에서 멈춘다
-const STEP_STOP_EARLY = 15; // 프레임 (30fps 기준 0.5초)
-
+const HIDE_MS = 3000; // 제어 화면이 저절로 숨기까지
 const ICON_PAUSE = `
   <svg width="59" height="59" viewBox="0 0 59 59">
     <rect x="21" y="18" width="6" height="24" rx="3" fill="#fff" />
@@ -80,15 +76,14 @@ export default {
     let lesson = null;
     let anim = null;
     let frame = 0;
-    let seg = 0;               // 지금 조각
     let playing = false;
-    let continuous = false;    // 꾹 눌러서 연속 재생 중
     let baseFrame = 0;         // 재생 시작 기준
     let baseTime = 0;
     let raf = 0;
     let disposed = false;
     let gates = [];            // 영상 속 인터랙션 (at 프레임 순)
     let awaiting = null;       // 지금 조작을 기다리는 인터랙션
+    let hideTimer = 0;
 
     // 화면 좌표 → 가로 화면 좌표
     function toLand(e) {
@@ -106,20 +101,29 @@ export default {
       return { x: (p.x - (W - w * s) / 2) / s, y: (p.y - (H - h * s) / 2) / s };
     }
 
-    // 인터랙션 지점에서 멈추기
+    // ---- 제어 화면 보이기 / 숨기기 ----
+    function showControls(show) {
+      controls.classList.toggle('show', show);
+      keepControls();
+    }
+    // 재생 중이면 3초 뒤 숨김 (멈춰 있을 때는 계속 보임)
+    function keepControls() {
+      clearTimeout(hideTimer);
+      if (controls.classList.contains('show') && playing) {
+        hideTimer = setTimeout(() => controls.classList.remove('show'), HIDE_MS);
+      }
+    }
+
+    // ---- 인터랙션 ----
     function stopAt(g) {
       frame = g.at;
       playing = false;
       awaiting = g;
       render();
     }
-    // 조작이 끝나면 이어서 재생 (한 조각 재생 중 그 조각 끝이었으면 다음 조각으로)
     function finish(g) {
       g.done = true;
       awaiting = null;
-      if (continuous) return play();
-      const s = lesson.segments[seg];
-      if (frame >= s.end - STEP_STOP_EARLY - 2) return playSegment(seg + 1);
       play();
     }
     // 뒤로 돌아가면 그 뒤의 인터랙션은 다시 할 수 있게
@@ -133,10 +137,52 @@ export default {
       }
     }
 
-    function segmentAt(f) {
-      const list = lesson.segments;
-      for (let i = list.length - 1; i >= 0; i -= 1) if (f >= list[i].start) return i;
-      return 0;
+    // ---- 재생 ----
+    function play(fromFrame = frame) {
+      if (fromFrame < frame) resetGatesAfter(fromFrame);
+      frame = fromFrame;
+      baseFrame = frame;
+      baseTime = performance.now();
+      playing = true;
+      render();
+      keepControls();
+    }
+    function pause() {
+      playing = false;
+      render();
+      keepControls();
+    }
+
+    function tick(now) {
+      raf = requestAnimationFrame(tick);
+      if (!playing) return;
+      const prev = frame;
+      frame = baseFrame + ((now - baseTime) / 1000) * lesson.fr;
+      const gate = gates.find((g) => !g.done && prev < g.at && frame >= g.at);
+      if (gate) return stopAt(gate);
+      if (frame >= lesson.data.op) {
+        frame = lesson.data.op;
+        state.watched.add(index); // 끝까지 봄
+        pause();
+        showControls(true);
+        return;
+      }
+      render();
+    }
+
+    // 탭: 지금 조각을 건너뛰고 다음 조각부터 (인터랙션은 건너뛰지 않는다)
+    function skip() {
+      const next = lesson.segments.find((s) => s.start > frame + 1);
+      const to = next ? next.start : lesson.data.op;
+      const gate = gates.find((g) => !g.done && g.at >= frame && g.at <= to);
+      if (gate) return stopAt(gate);
+      if (!next) {
+        frame = lesson.data.op;
+        state.watched.add(index);
+        pause();
+        return showControls(true);
+      }
+      play(to);
     }
 
     // 프레임 → 재생바 위 x (장면 구간 사이 틈을 고려)
@@ -155,7 +201,6 @@ export default {
     function render() {
       anim.goToAndStop(frame, true);
       timeText.textContent = `${clock(frame / lesson.fr)} / ${clock(lesson.total / lesson.fr)}`;
-      // 재생바
       lesson.scenes.forEach((s, i) => {
         const fill = bar.children[i].firstElementChild;
         const p = Math.max(0, Math.min(1, (frame - s.start) / (s.end - s.start)));
@@ -169,62 +214,9 @@ export default {
       }
     }
 
-    function tick(now) {
-      raf = requestAnimationFrame(tick);
-      if (!playing) return;
-      const prev = frame;
-      frame = baseFrame + ((now - baseTime) / 1000) * lesson.fr;
-      const gate = gates.find((g) => !g.done && prev < g.at && frame >= g.at);
-      if (gate) return stopAt(gate);
-      const s = lesson.segments[seg];
-      const last = seg === lesson.segments.length - 1; // 마지막 조각은 끝까지 (다 본 것으로 기록)
-      const end = continuous || last ? s.end : Math.max(s.start, s.end - STEP_STOP_EARLY);
-      if (frame >= end) {
-        frame = end;
-        playing = false;
-        continuous = false;
-      }
-      // 연속 재생일 때만 지금 조각이 따라 바뀐다 (한 조각 재생은 그 조각 끝에서 멈춰야 하므로)
-      if (continuous) seg = segmentAt(Math.min(frame, lesson.data.op - 0.01));
-      if (frame >= lesson.data.op) state.watched.add(index); // 끝까지 봄
-      render();
-    }
-
-    function play(fromFrame = frame) {
-      if (fromFrame < frame) resetGatesAfter(fromFrame);
-      frame = fromFrame;
-      baseFrame = frame;
-      baseTime = performance.now();
-      playing = true;
-      render();
-    }
-    function pause() {
-      playing = false;
-      render();
-    }
-
-    function playSegment(i) {
-      seg = Math.max(0, Math.min(lesson.segments.length - 1, i));
-      continuous = false;
-      play(lesson.segments[seg].start);
-    }
-
-    function nextSegment() {
-      // 지금 조각을 다 봤으면 다음 조각, 아직 재생 중이면 바로 다음 조각
-      const next = lesson.segments[seg + 1];
-      const skipped = next && gates.find((g) => !g.done && g.at >= frame && g.at <= next.start);
-      if (skipped) return stopAt(skipped); // 인터랙션은 건너뛰지 않는다
-      if (seg + 1 < lesson.segments.length) playSegment(seg + 1);
-      else if (!playing) playSegment(0);
-    }
-
-    function showControls(show) {
-      controls.classList.toggle('show', show);
-    }
-
     // 재생바 드래그
     function seekTo(e) {
-      const x = toLand(e).x - 205; // 재생바 시작 x
+      const x = toLand(e).x - progress.offsetLeft;
       const segEls = [...bar.children];
       let f = lesson.data.op;
       for (let i = 0; i < segEls.length; i += 1) {
@@ -241,7 +233,6 @@ export default {
       if (f < frame) resetGatesAfter(f);
       awaiting = null;
       frame = f;
-      seg = segmentAt(frame);
       render();
     }
 
@@ -249,7 +240,7 @@ export default {
     land.addEventListener('pointerdown', (e) => {
       if (!lesson) return;
       land.setPointerCapture(e.pointerId);
-      const start = toLand(e);
+      clearTimeout(hideTimer); // 만지는 동안은 숨기지 않는다
 
       if (controls.classList.contains('show') && e.target.closest('.progress')) {
         gesture = { type: 'seek', id: e.pointerId, wasPlaying: playing };
@@ -264,15 +255,7 @@ export default {
         gesture = { type: 'gate', id: e.pointerId };
         return;
       }
-
-      gesture = { type: 'touch', id: e.pointerId, start, moved: false, held: false, target: e.target };
-      if (awaiting) return; // 조작을 기다리는 동안은 꾹 누르기(연속 재생) 없음
-      gesture.timer = setTimeout(() => {
-        // 꾹 누르기: 연속 재생
-        gesture.held = true;
-        continuous = true;
-        play(frame >= lesson.data.op ? 0 : frame);
-      }, HOLD_MS);
+      gesture = { type: 'touch', id: e.pointerId, start: toLand(e), moved: false, target: e.target };
     });
 
     land.addEventListener('pointermove', (e) => {
@@ -280,43 +263,47 @@ export default {
       if (gesture.type === 'seek') return seekTo(e);
       if (gesture.type === 'gate') return awaiting?.move(e);
       const p = toLand(e);
-      if (Math.hypot(p.x - gesture.start.x, p.y - gesture.start.y) > MOVE_SLOP) {
-        gesture.moved = true;
-        clearTimeout(gesture.timer);
-      }
+      if (Math.hypot(p.x - gesture.start.x, p.y - gesture.start.y) > MOVE_SLOP) gesture.moved = true;
     });
 
     land.addEventListener('pointerup', (e) => {
-      if (!gesture || e.pointerId !== gesture.id) return;
       const g = gesture;
       gesture = null;
+      if (!g || e.pointerId !== g.id) return keepControls();
       if (g.type === 'seek') {
         if (g.wasPlaying) play();
+        else keepControls();
         return;
       }
-      if (g.type === 'gate') return awaiting?.up(e);
-      clearTimeout(g.timer);
-      if (g.held) return;
+      if (g.type === 'gate') {
+        awaiting?.up(e);
+        return keepControls();
+      }
       const p = toLand(e);
       const dy = p.y - g.start.y;
       if (g.moved) {
         if (Math.abs(dy) > SWIPE_PX && Math.abs(dy) > Math.abs(p.x - g.start.x)) showControls(dy < 0);
+        else keepControls();
         return;
       }
-      if (awaiting) return awaiting.tap?.({ target: g.target }); // 카드 고르기 (다른 곳 탭은 무시)
-      nextSegment();
+      if (awaiting) {
+        awaiting.tap?.({ target: g.target }); // 고르기·마이크 (다른 곳 탭은 무시)
+        return keepControls();
+      }
+      // 제어 화면이 보일 때 빈 곳 탭 → 숨기기 (유튜브처럼). 숨어 있을 때 탭 → 다음 조각
+      if (controls.classList.contains('show')) return showControls(false);
+      skip();
     });
     land.addEventListener('pointercancel', () => {
-      if (gesture) clearTimeout(gesture.timer);
       gesture = null;
+      keepControls();
     });
 
     el.querySelector('.back').addEventListener('click', () => go('lecture', { transition: 'pop' }));
     toggleBtn.addEventListener('click', () => {
-      if (awaiting) return; // 조작을 끝내야 이어서 재생
+      if (awaiting) return keepControls(); // 조작을 끝내야 이어서 재생
       if (playing) return pause();
-      if (frame >= lesson.data.op) return playSegment(0);
-      play();
+      play(frame >= lesson.data.op ? 0 : frame);
     });
     el.querySelectorAll('.lang-btn').forEach((b) => b.addEventListener('click', () => {
       // TODO: 스페인어 음성/자막이 생기면 전환
@@ -352,7 +339,7 @@ export default {
           })
           .sort((a, b) => a.at - b.at);
         raf = requestAnimationFrame(tick);
-        playSegment(0);
+        play(0);
       };
       if (anim.isLoaded) start();
       else anim.addEventListener('DOMLoaded', start);
@@ -361,6 +348,7 @@ export default {
     return () => {
       disposed = true;
       cancelAnimationFrame(raf);
+      clearTimeout(hideTimer);
       anim?.destroy();
     };
   },

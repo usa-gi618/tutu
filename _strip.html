@@ -1,8 +1,8 @@
 <!doctype html><html><head><style>body{margin:0;display:grid;grid-template-columns:repeat(3,463px);gap:4px;background:#333} .c{width:463px;height:214px;overflow:hidden;position:relative;background:#fff} .c>div{width:926px;height:428px;transform:scale(.5);transform-origin:0 0} .c b{position:absolute;left:4px;bottom:2px;font:12px sans-serif;color:red;z-index:9}</style>
 <script src="vendor/lottie_svg.min.js"></script></head><body><script>
-const frames=location.hash.slice(1).split(',').map(Number);
-fetch('assets/lessons/tree_mass_lesson.json').then(r=>r.json()).then(d=>{
+const [file, list]=decodeURIComponent(location.hash.slice(1)).split('@'); const frames=list.split(',').map(Number);
+fetch('assets/lessons/'+file+'.json').then(r=>r.json()).then(d=>{
   for(const f of frames){const c=document.createElement('div');c.className='c';const v=document.createElement('div');c.append(v);const b=document.createElement('b');b.textContent=f;c.append(b);document.body.append(c);
    const a=lottie.loadAnimation({container:v,renderer:'svg',loop:false,autoplay:false,animationData:JSON.parse(JSON.stringify(d))});a.goToAndStop(f,true);}
-});
+}).catch(e=>{document.body.textContent=e});
 </script></body></html>

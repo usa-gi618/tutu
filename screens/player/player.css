@@ -31,20 +31,20 @@
 .screen-player .shade {
   position: absolute;
   inset: 0;
-  opacity: 0.8;
-  mix-blend-mode: multiply;
-  background: linear-gradient(180deg, #8f8f8f 0%, #fff 37.981%, #fff 56.25%, #8f8f8f 100%);
+  /* 유튜브처럼: 화면 전체를 어둡게 + 제목·재생바가 있는 위아래는 더 어둡게 */
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0) 30%, rgba(0, 0, 0, 0) 62%, rgba(0, 0, 0, 0.65) 100%),
+    rgba(0, 0, 0, 0.4);
   pointer-events: none;
 }
 
-/* 반투명 회색 버튼 공통: 배경만 multiply, 안의 흰 아이콘·글자는 그대로 */
+/* 반투명 버튼 공통: 어두운 화면 위에서 보이도록 밝은 반투명 */
 .screen-player .glass::before {
   content: '';
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: #e5e5e5;
-  mix-blend-mode: multiply;
+  background: rgba(255, 255, 255, 0.2);
 }
 .screen-player .glass > * { position: relative; }
 
@@ -169,8 +169,7 @@
   position: relative;
   height: 3px;
   border-radius: 1.5px;
-  background: #e5e5e5;
-  mix-blend-mode: multiply;
+  background: rgba(255, 255, 255, 0.35);
   overflow: hidden;
 }
 .screen-player .seg i {
@@ -179,7 +178,7 @@
   top: 0;
   bottom: 0;
   width: 0;
-  background: #000;
+  background: #fff;
   border-radius: 1.5px;
 }
 .screen-player .head {
@@ -190,7 +189,7 @@
   margin-left: -4.5px;
   border-radius: 50%;
   background: #fff;
-  border: 2px solid #000;
+  border: 2px solid #fff;
 }
 /* 학생이 고르거나 조작해야 하는 지점 (Figma: 재생바 위 7px 검은 점) */
 .screen-player .gate-dot {
@@ -200,7 +199,7 @@
   height: 7px;
   margin-left: -3.5px;
   border-radius: 50%;
-  background: #000;
+  background: #fff; /* Figma는 검정이지만 어두운 배경 위라 흰색 */
   pointer-events: none;
 }
 
