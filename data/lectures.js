@@ -8,6 +8,8 @@
 //   answer: 확인 문제. options 중 하나 탭 → 정답(answer)은 초록, 틀린 선택은 회색
 //   tap   : target(마이크 등)을 탭하면 이어서 재생
 //   drag  : item을 target 위로 끌어다 놓기
+//   slider: knob을 끝(to)까지 끌기 → activate.on 나무 활성
+//   toggles: 스위치 탭으로 켜고 끄기 → 모두 goal 상태가 되면 완료
 //   split = 한 레이어 안 도형 묶음을 따로 떼어 쓸 레이어로 만들기, freeze = 영상에 미리 들어 있는 강조 지우기
 const checkOptions = (layer = 'check-card') => ['option-1', 'option-2', 'option-3'].map((o) => ({ layer, groups: [o], as: o }));
 
@@ -25,6 +27,20 @@ export const TODAY = [
       { type: 'pick', scene: '01_predict', at: 197, options: ['choice-soil', 'choice-water', 'choice-air'], badge: 'My prediction', freeze: { layer: 'choice-soil', from: 200 } },
       // 02 무게 재기: 화분+묘목(drop-zone의 도형 1~3)을 저울 위로 끌어다 놓기
       { type: 'drag', scene: '02_step1_weigh', at: 352, split: [{ layer: 'drop-zone', groups: [1, 2, 3], as: 'drag-item' }], item: 'drag-item', target: 'scale' },
+      // 03 5년 흐르게 하기: 슬라이더 손잡이를 끝(5 yrs)까지 끌면 5년 나무가 자란다
+      {
+        type: 'slider', scene: '03_step2_grow', at: 605,
+        split: [{ layer: 'time-slider', groups: [2], as: 'slider-knob' }, { layer: 'time-slider', groups: [3], as: 'slider-fill' }],
+        knob: 'slider-knob', fill: 'slider-fill', track: 'time-slider', from: 263, start: 463, to: 663,
+        activate: { on: 'year-5', off: 'year-3' },
+      },
+      // 05 이산화탄소 끄기: 빛·물·CO₂ 스위치 (처음엔 모두 켜짐). CO₂만 끄면 실험이 이어진다
+      {
+        type: 'toggles', scene: '05_step4_no_co2', at: 1045,
+        split: ['toggle-0', 'toggle-1', 'toggle-2'].flatMap((t) => [{ layer: t, groups: [0], as: `${t}-knob` }, { layer: t, groups: [1], as: `${t}-track` }]),
+        toggles: ['toggle-0', 'toggle-1', 'toggle-2'], // Light, Water, CO₂
+        original: [true, true, false], start: [true, true, true], goal: [true, true, false], travel: 20,
+      },
       // 07 확인 문제
       { type: 'answer', scene: '07_check', at: 1616, split: checkOptions(), options: ['option-1', 'option-2', 'option-3'], answer: 'option-2' },
     ],

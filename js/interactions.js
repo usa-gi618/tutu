@@ -46,15 +46,19 @@ function freezeFrom(layer, from) {
   walk(layer.ks);
 }
 
-// 레이어의 도형 묶음(groups: 순서 번호 또는 묶음 이름)을 새 레이어(name)로 떼어낸다. 새 레이어가 위에 그려진다.
+// 레이어의 도형 묶음(groups: 원래 레이어 기준 순서 번호 또는 묶음 이름)을 새 레이어(name)로 떼어낸다.
+// 새 레이어가 위에 그려진다. 같은 레이어를 여러 번 나눠도 번호는 항상 원래 순서 기준.
+const originalShapes = new WeakMap();
 function splitLayer(data, scene, layerName, groups, name) {
   const { list, i, layer } = findLayer(data, scene, layerName);
-  const picked = groups.map((g) => (typeof g === 'number' ? g : layer.shapes.findIndex((s) => s.nm === g)));
+  if (!originalShapes.has(layer)) originalShapes.set(layer, [...layer.shapes]);
+  const original = originalShapes.get(layer);
+  const picked = groups.map((g) => (typeof g === 'number' ? original[g] : original.find((s) => s.nm === g)));
   const part = JSON.parse(JSON.stringify(layer));
   part.nm = name;
   part.ind = Math.max(...list.map((l) => l.ind ?? 0)) + 1;
-  part.shapes = picked.map((g) => layer.shapes[g]);
-  layer.shapes = layer.shapes.filter((_, g) => !picked.includes(g));
+  part.shapes = JSON.parse(JSON.stringify(picked));
+  layer.shapes = layer.shapes.filter((s) => !picked.includes(s));
   list.splice(i, 0, part);
 }
 
@@ -109,6 +113,43 @@ function badge(layer, box, label, at = 'bottom-left') {
   g.append(text);
   layer.append(g);
 }
+
+// 레이어 안 도형 색 바꾸기. map = { fill: [[원래 rgb, 바꿀 rgb], ...], stroke: [...] } (0~255)
+// 처음 바꿀 때 원래 색을 기억해 두고 restore()로 되돌린다.
+const rgbOf = (v) => (v?.match(/\d+(\.\d+)?/g) ?? []).slice(0, 3).map((n) => Math.round(Number(n)));
+const same = (a, b) => a.length === 3 && a.every((v, i) => Math.abs(v - b[i]) <= 2);
+function recolor(layer, map) {
+  for (const attr of ['fill', 'stroke']) {
+    for (const node of layer.querySelectorAll(`[${attr}]`)) {
+      const key = `orig${attr}`;
+      if (!(key in node.dataset)) node.dataset[key] = node.getAttribute(attr);
+      const now = rgbOf(node.dataset[key]);
+      const hit = (map[attr] ?? []).find(([from]) => same(now, from));
+      node.setAttribute(attr, hit ? `rgb(${hit[1].join(',')})` : node.dataset[key]);
+    }
+  }
+}
+function restore(layer) {
+  for (const attr of ['fill', 'stroke']) {
+    for (const node of layer.querySelectorAll(`[data-orig${attr}]`)) node.setAttribute(attr, node.dataset[`orig${attr}`]);
+  }
+}
+// 레이어 안쪽을 한 번 더 감싸서 우리가 움직인다 (레이어 자체 transform은 Lottie가 관리)
+function wrap(layer) {
+  const inner = svgEl('g', {});
+  inner.append(...layer.childNodes);
+  layer.append(inner);
+  return inner;
+}
+
+// Figma/Lottie 색 (0~255)
+const C = {
+  black: [0, 0, 0], white: [255, 255, 255], green: [85, 223, 148],
+  grey220: [220, 220, 220], grey171: [171, 171, 171], grey241: [241, 241, 241], grey110: [110, 110, 110],
+};
+// 나무 그림: 활성(초록 나무) ↔ 비활성(회색 나무)
+const TREE_ON = { fill: [[C.grey171, C.black], [C.grey241, C.white], [C.grey220, C.green]], stroke: [[C.grey171, C.black]] };
+const TREE_OFF = { fill: [[C.black, C.grey171], [C.white, C.grey241], [C.green, C.grey220]], stroke: [[C.black, C.grey171]] };
 
 /*
   it   : 인터랙션 설정 (data/lectures.js)
@@ -168,13 +209,104 @@ export function create(it, svg, toSvg, done) {
     };
   }
 
+  // 슬라이더: knob을 끝(to)까지 끌면 완료. fill 막대가 knob을 따라 늘어난다. 끝에 닿으면 activate.on 나무를 살리고 off는 회색으로
+  if (it.type === 'slider') {
+    const knob = wrap(find(it.knob));
+    const fill = wrap(find(it.fill));
+    const track = find(it.track);
+    let x = it.start;
+    let drag = null;
+    const setX = (v) => {
+      x = Math.max(it.from, Math.min(it.to, v));
+      knob.setAttribute('transform', `translate(${x - it.start} 0)`);
+      const sx = (x - it.from) / (it.start - it.from); // 원래 채워진 길이 대비
+      fill.setAttribute('transform', `translate(${it.from} 0) scale(${sx} 1) translate(${-it.from} 0)`);
+    };
+    const setYears = (atEnd) => {
+      if (atEnd) {
+        recolor(find(it.activate.on), TREE_ON);
+        recolor(find(it.activate.off), TREE_OFF);
+      } else {
+        restore(find(it.activate.on));
+        restore(find(it.activate.off));
+      }
+    };
+    return {
+      at: it.at,
+      down(e) {
+        if (!knob.parentNode.contains(e.target) && !track.contains(e.target) && !fill.parentNode.contains(e.target)) return false;
+        drag = true;
+        setX(toSvg(e).x);
+        return true;
+      },
+      move(e) {
+        if (drag) setX(toSvg(e).x);
+      },
+      up() {
+        if (!drag) return;
+        drag = null;
+        if (x < it.to - 25) return; // 끝까지 가야 완료
+        setX(it.to);
+        setYears(true);
+        setTimeout(done, 350);
+      },
+      reset() {
+        drag = null;
+        setX(it.start);
+        setYears(false);
+      },
+    };
+  }
+
+  // 스위치: 탭하면 켜고 끈다. 모두 goal 상태가 되면 완료.
+  // 영상에 그려진 원래 상태(original)와 다르게 보여줄 때만 색과 손잡이 위치를 바꾼다.
+  if (it.type === 'toggles') {
+    const rows = it.toggles.map((name, i) => ({
+      row: find(name),
+      track: find(`${name}-track`),
+      knob: wrap(find(`${name}-knob`)),
+      original: it.original[i],
+      on: it.start[i],
+    }));
+    const draw = (r) => {
+      if (r.on === r.original) {
+        restore(r.track);
+        restore(r.row);
+        r.knob.removeAttribute('transform');
+        return;
+      }
+      // 켜짐: 검정 막대 + 손잡이 오른쪽 + 검정 글자 / 꺼짐: 회색 막대 + 손잡이 왼쪽 + 회색 글자
+      recolor(r.track, { fill: r.on ? [[C.grey220, C.black]] : [[C.black, C.grey220]] });
+      recolor(r.row, { fill: r.on ? [[C.grey110, C.black]] : [[C.black, C.grey110]] });
+      r.knob.setAttribute('transform', `translate(${r.on ? it.travel : -it.travel} 0)`);
+    };
+    rows.forEach(draw);
+    let finished = false;
+    return {
+      at: it.at,
+      tap(e) {
+        if (finished) return true;
+        const r = rows.find((x) => [x.row, x.track, x.knob.parentNode].some((n) => n.contains(e.target)));
+        if (!r) return false;
+        r.on = !r.on;
+        draw(r);
+        if (rows.every((x, i) => x.on === it.goal[i])) {
+          finished = true;
+          setTimeout(done, 400);
+        }
+        return true;
+      },
+      reset() {
+        finished = false;
+        rows.forEach((r, i) => { r.on = it.start[i]; draw(r); });
+      },
+    };
+  }
+
   // 끌어다 놓기: item 레이어를 target 레이어 위로
   if (it.type === 'drag') {
     const item = find(it.item);
-    // 레이어 안쪽을 한 번 더 감싸서 우리가 움직인다 (레이어 자체 transform은 Lottie가 관리)
-    const inner = svgEl('g', {});
-    inner.append(...item.childNodes);
-    item.append(inner);
+    const inner = wrap(item);
     let offset = { x: 0, y: 0 };
     let drag = null;
     const moveTo = (p) => {
