@@ -299,7 +299,7 @@ export default {
       keepControls();
     });
 
-    el.querySelector('.back').addEventListener('click', () => go('lecture', { transition: 'pop' }));
+    el.querySelector('.back').addEventListener('click', () => go(state.playerBack, { transition: 'pop' }));
     toggleBtn.addEventListener('click', () => {
       if (awaiting) return keepControls(); // 조작을 끝내야 이어서 재생
       if (playing) return pause();

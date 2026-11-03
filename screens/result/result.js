@@ -77,6 +77,7 @@ export default {
     cta.addEventListener('click', () => {
       if (selected === -1) return;
       state.watching = selected;
+      state.playerBack = 'lecture';
       go('lecture');
     });
   },

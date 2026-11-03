@@ -6,4 +6,8 @@ export const state = {
   watching: -1,
   // 끝까지 본 강의 (TODAY 인덱스)
   watched: new Set(),
+  // 플레이어에서 뒤로 가면 돌아갈 화면 ('lecture' = 결과 화면에서 들어온 강의 시작 화면, 'library')
+  playerBack: 'lecture',
+  // 라이브러리에서 보고 있던 과목
+  librarySubject: null,
 };

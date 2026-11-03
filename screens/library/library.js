@@ -42,6 +42,7 @@ export default {
     const list = el.querySelector('.list');
 
     function select(subject) {
+      state.librarySubject = subject;
       chips.querySelectorAll('.chip').forEach((c) => c.classList.toggle('active', c.dataset.subject === subject));
       list.innerHTML = libraryFor(subject, state).map(card).join('');
       list.scrollTop = 0;
@@ -51,12 +52,15 @@ export default {
       const chip = e.target.closest('.chip');
       if (chip) select(chip.dataset.subject);
     });
+    // Study / Re-play: 지난 수업도 강의를 다 만들 수 없어서, 그 과목의 오늘 강의 영상으로 통일해서 재생
     list.addEventListener('click', (e) => {
       if (!e.target.closest('.action')) return;
-      // TODO: 강의 화면이 만들어지면 해당 수업으로 이동
+      state.watching = TODAY.findIndex((l) => l.subject === state.librarySubject);
+      state.playerBack = 'library';
+      go('player');
     });
     el.querySelector('.home-btn').addEventListener('click', () => go('home', { transition: 'pop' }));
 
-    select(TODAY[0].subject);
+    select(state.librarySubject ?? TODAY[0].subject);
   },
 };
