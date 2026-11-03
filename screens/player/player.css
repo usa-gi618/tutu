@@ -18,6 +18,27 @@
 .screen-player .video { position: absolute; inset: 0; }
 .screen-player .video svg { display: block; }
 
+/* 길게 누르는 동안 위쪽 가운데에 배속 표시 (유튜브처럼) */
+.screen-player .speed {
+  position: absolute;
+  left: 50%;
+  top: 24px;
+  transform: translateX(-50%);
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  pointer-events: none;
+  z-index: 3;
+}
+.screen-player .speed.show { opacity: 1; }
+
 /* 제어 화면: 위로 스와이프하면 나타나고 아래로 스와이프하면 숨는다 */
 .screen-player .controls {
   position: absolute;

@@ -1,7 +1,8 @@
 // Figma 11540:2496 (영상 + 제어 화면, 가로)
 // 강의 영상(Lottie)을 일반 영상처럼 끝까지 이어서 재생한다.
 //   탭        : 지금 장면 조각(마커 한 문장)을 건너뛰고 다음 조각부터 재생
-//   위/아래 스와이프 : 제어 화면 보이기 / 숨기기. 재생 중 3초 동안 조작이 없으면 저절로 숨는다 (유튜브처럼)
+//   위로 스와이프 : 제어 화면 보이기. 재생 중 3초 동안 조작이 없으면 저절로 숨는다 (유튜브처럼)
+//   길게 누르기 : 오른쪽 절반 = 2배속 빨리 감기, 왼쪽 절반 = 2배속 되감기 (누르는 동안만)
 //   재생바 드래그 : 원하는 위치로 이동
 //   영상 속 인터랙션(고르기, 끌어다 놓기, 마이크) 지점에 오면 멈추고, 학생이 조작을 끝내면 이어서 재생
 /* global lottie */
@@ -11,6 +12,8 @@ import { loadLesson } from '../../js/lessons.js';
 import { create as createInteraction } from '../../js/interactions.js';
 
 const SWIPE_PX = 40;
+const HOLD_MS = 400;  // 길게 누르기로 보는 시간
+const FAST = 2;       // 빨리 감기 / 되감기 배속
 const MOVE_SLOP = 10;
 const HIDE_MS = 3000; // 제어 화면이 저절로 숨기까지
 const ICON_PAUSE = `
@@ -31,6 +34,7 @@ export default {
     return `
       <div class="land">
         <div class="video"></div>
+        <div class="speed"></div>
 
         <div class="controls">
           <div class="shade"></div>
@@ -78,6 +82,7 @@ export default {
     let frame = 0;
     let playing = false;
     let baseFrame = 0;         // 재생 시작 기준
+    let rate = 1;              // 재생 속도 (2 = 빨리 감기, -2 = 되감기)
     let baseTime = 0;
     let raf = 0;
     let disposed = false;
@@ -140,6 +145,7 @@ export default {
     // ---- 재생 ----
     function play(fromFrame = frame) {
       if (fromFrame < frame) resetGatesAfter(fromFrame);
+      rate = 1;
       frame = fromFrame;
       baseFrame = frame;
       baseTime = performance.now();
@@ -157,10 +163,20 @@ export default {
       raf = requestAnimationFrame(tick);
       if (!playing) return;
       const prev = frame;
-      frame = baseFrame + ((now - baseTime) / 1000) * lesson.fr;
+      frame = baseFrame + ((now - baseTime) / 1000) * lesson.fr * rate;
+      if (rate < 0) {
+        // 되감기: 처음에서 멈추고, 지나온 조작 장면은 다시 할 수 있게
+        frame = Math.max(0, frame);
+        resetGatesAfter(frame);
+        return render();
+      }
       const gate = gates.find((g) => !g.done && prev < g.at && frame >= g.at);
-      if (gate) return stopAt(gate);
+      if (gate) {
+        endHold();
+        return stopAt(gate);
+      }
       if (frame >= lesson.data.op) {
+        endHold();
         frame = lesson.data.op;
         state.watched.add(index); // 끝까지 봄
         pause();
@@ -168,6 +184,29 @@ export default {
         return;
       }
       render();
+    }
+
+    // 길게 누르기: 누르는 동안 빨리 감기(dir 1) / 되감기(dir -1)
+    const speedBadge = el.querySelector('.speed');
+    let hold = null; // { wasPlaying }
+    function startHold(dir) {
+      hold = { wasPlaying: playing };
+      rate = FAST * dir;
+      baseFrame = frame;
+      baseTime = performance.now();
+      playing = true;
+      speedBadge.textContent = dir > 0 ? `▶▶ ${FAST}x` : `◀◀ ${FAST}x`;
+      speedBadge.classList.add('show');
+      render();
+    }
+    function endHold() {
+      if (!hold) return;
+      const { wasPlaying } = hold;
+      hold = null;
+      rate = 1;
+      speedBadge.classList.remove('show');
+      if (wasPlaying && !awaiting && frame < lesson.data.op) play();
+      else pause();
     }
 
     // 탭: 지금 조각을 건너뛰고 다음 조각부터 (인터랙션은 건너뛰지 않는다)
@@ -256,6 +295,12 @@ export default {
         return;
       }
       gesture = { type: 'touch', id: e.pointerId, start: toLand(e), moved: false, target: e.target };
+      if (awaiting) return; // 조작을 기다리는 동안은 빨리 감기 없음
+      const g = gesture;
+      g.timer = setTimeout(() => {
+        g.held = true;
+        startHold(g.start.x > land.offsetWidth / 2 ? 1 : -1);
+      }, HOLD_MS);
     });
 
     land.addEventListener('pointermove', (e) => {
@@ -263,7 +308,10 @@ export default {
       if (gesture.type === 'seek') return seekTo(e);
       if (gesture.type === 'gate') return awaiting?.move(e);
       const p = toLand(e);
-      if (Math.hypot(p.x - gesture.start.x, p.y - gesture.start.y) > MOVE_SLOP) gesture.moved = true;
+      if (!gesture.held && Math.hypot(p.x - gesture.start.x, p.y - gesture.start.y) > MOVE_SLOP) {
+        gesture.moved = true;
+        clearTimeout(gesture.timer);
+      }
     });
 
     land.addEventListener('pointerup', (e) => {
@@ -279,10 +327,13 @@ export default {
         awaiting?.up(e);
         return keepControls();
       }
+      clearTimeout(g.timer);
+      if (g.held) return endHold();
       const p = toLand(e);
       const dy = p.y - g.start.y;
       if (g.moved) {
-        if (Math.abs(dy) > SWIPE_PX && Math.abs(dy) > Math.abs(p.x - g.start.x)) showControls(dy < 0);
+        // 위로 스와이프만 제어 화면 보이기 (아래로 스와이프는 동작 없음)
+        if (dy < -SWIPE_PX && Math.abs(dy) > Math.abs(p.x - g.start.x)) showControls(true);
         else keepControls();
         return;
       }
@@ -295,7 +346,9 @@ export default {
       skip();
     });
     land.addEventListener('pointercancel', () => {
+      clearTimeout(gesture?.timer);
       gesture = null;
+      endHold();
       keepControls();
     });
 
