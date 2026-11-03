@@ -63,6 +63,25 @@ export const TODAY = [
       // 07 확인 문제
       { type: 'answer', scene: '07_check', at: 1616, split: checkOptions(), options: ['option-1', 'option-2', 'option-3'], answer: 'option-2' },
     ],
+    // 영상이 끝난 뒤 복습 문제 (screens/review). 블록을 빈칸에 넣어 순서 맞추기
+    //   틀리면 힌트 → 다시 풀기. 또 틀리면 설명 + 영상 다시 보기(rewatch 구간) → 비슷한 문제(similar)
+    review: {
+      concept: 'Where a tree’s mass comes from',
+      quiz: {
+        prompt: 'Put van Helmont’s experiment in order.',
+        steps: ['Weigh the dry soil and the sapling', 'Let five years pass, giving only water', 'Weigh the tree and the soil again'],
+        pool: [2, 0, 1], // 오른쪽에 처음 놓이는 순서 (섞어서)
+        hint: 'You need a starting weight before any time passes.',
+      },
+      how: 'Measure first, let time pass, then measure again. Comparing the two weights shows where the mass came from.',
+      rewatch: { from: 295, to: 1006, label: 'Rewatch the experiment' }, // 02 무게 재기 ~ 04 다시 재기
+      similar: {
+        prompt: 'Put the CO₂ experiment in order.',
+        steps: ['Seal the plant in a box', 'Take away the carbon dioxide', 'Check how much it grew after 30 days'],
+        pool: [1, 2, 0],
+        hint: 'Set up the box first, then change one thing.',
+      },
+    },
     // 말풍선 캐릭터에게 질문하기 (프로토타입용 질문·답변 한 쌍)
     ask: {
       question: 'So how does air turn into the wood of a tree?',

@@ -7,8 +7,9 @@ import result from '../screens/result/result.js';
 import library from '../screens/library/library.js';
 import lecture from '../screens/lecture/lecture.js';
 import player from '../screens/player/player.js';
+import review from '../screens/review/review.js';
 
-const screens = { onboarding, home, quickcheck, result, library, lecture, player };
+const screens = { onboarding, home, quickcheck, result, library, lecture, player, review };
 const stage = document.getElementById('stage');
 const DURATION = 380;
 const EASING = 'cubic-bezier(0.2, 0.8, 0.2, 1)';

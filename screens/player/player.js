@@ -9,6 +9,7 @@
 //   말풍선 캐릭터(오른쪽 아래, 영상 내내 보임): 누르면 영상이 멈추고 배경이 흐려지며 마이크가 뜬다.
 //     학생이 말하는 문장이 초록 자막으로 나오고(음성 인식 흉내), 끝나면 캐릭터가 큰 말풍선으로 커지며 AI 답변 (Figma 11734:2041)
 //     답변 화면을 탭하면 다시 작아지고 영상이 이어진다. 질문·답변은 강의 데이터의 ask (지금은 생물만)
+//   다시 보기(state.rewatch = { from, to }): 복습 문제에서 영상 일부를 다시 볼 때. 끝나면 복습 문제로 돌아간다
 //   EN / ES: 스페인어면 영상 속 영어 자막을 숨기고 스페인어 자막을 띄우며, 코드로 그리는 글자를 모두 바꾼다 (data/spanish.js)
 /* global lottie */
 import { TODAY } from '../../data/lectures.js';
@@ -297,6 +298,10 @@ export default {
         endHold();
         return stopAt(gate);
       }
+      if (state.rewatch && frame >= state.rewatch.to) {
+        endHold();
+        return finishRewatch();
+      }
       if (frame >= END) {
         endHold();
         return finishVideo();
@@ -305,6 +310,13 @@ export default {
     }
 
     // ---- 끝 ----
+    // 복습 문제에서 연 다시 보기 구간을 끝까지 봄 → 비슷한 문제 열림
+    function finishRewatch() {
+      pause();
+      state.rewatch = null;
+      if (state.review) state.review.rewatched = true;
+      go('review', { transition: 'pop' });
+    }
     function finishVideo() {
       frame = END;
       state.watched.add(index); // 끝까지 봄
@@ -500,7 +512,10 @@ export default {
       keepControls();
     });
 
-    el.querySelector('.back').addEventListener('click', () => go(state.playerBack, { transition: 'pop' }));
+    el.querySelector('.back').addEventListener('click', () => {
+      state.rewatch = null; // 다시 보기를 중간에 나가면 비슷한 문제는 그대로 잠김
+      go(state.playerBack, { transition: 'pop' });
+    });
     toggleBtn.addEventListener('click', () => {
       if (awaiting) return keepControls(); // 조작을 끝내야 이어서 재생
       if (playing) return pause();
@@ -512,7 +527,8 @@ export default {
       play(0);
     });
     el.querySelector('.start-questions').addEventListener('click', () => {
-      // TODO: 문제풀이 화면
+      state.review = null; // 복습 문제 새로 시작
+      go('review');
     });
     el.querySelectorAll('.lang-btn').forEach((b) => b.addEventListener('click', () => {
       state.lang = b.dataset.lang;
@@ -603,7 +619,7 @@ export default {
           .sort((a, b) => a.at - b.at);
         applyLang();
         raf = requestAnimationFrame(tick);
-        play(0);
+        play(state.rewatch?.from ?? 0);
       };
       if (anim.isLoaded) start();
       else anim.addEventListener('DOMLoaded', start);

@@ -49,6 +49,11 @@ img { -webkit-user-drag: none; }
   background: #fff;
   container-type: size; /* 가로 화면(강의)이 이 크기를 기준으로 돈다 */
 }
+/* 가로 화면(강의 시작, 플레이어, 복습 문제)은 폰을 눕혀서 보므로 세로 기준 위쪽 상태바가 화면 오른쪽 끝이 된다.
+   상태바 자리를 숨기지 않고 실제로 보이는 영역만 쓴다 (오른쪽 끝 내용이 상태바에 가리지 않게) */
+.screen-lecture,
+.screen-player,
+.screen-review { top: env(safe-area-inset-top, 0px); }
 .stage.busy { pointer-events: none; } /* 전환 중 연타 방지 */
 .screen.grad { background: linear-gradient(to bottom, #ffffe2 0%, #fff 35.799%); }
 

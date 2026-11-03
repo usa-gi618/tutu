@@ -12,4 +12,10 @@ export const state = {
   librarySubject: null,
   // 영상 화면 언어 ('en' | 'es')
   lang: 'en',
+  // 복습 문제 진행: { lecture, stage: 'quiz' | 'how' | 'similar' | 'done', tries, rewatched }
+  review: null,
+  // 영상 일부 다시 보기: { from, to } 프레임. 끝나면 복습 문제로 돌아간다
+  rewatch: null,
+  // 복습까지 마친 강의 (TODAY 인덱스)
+  mastered: new Set(),
 };
