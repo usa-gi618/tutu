@@ -1,5 +1,6 @@
 // 선생님 앱 (임시로 학생 앱 안에). 홈 화면 "Up next" 제목을 빠르게 4번 탭하면 들어온다.
-// 각 화면 맨 위 작은 글씨를 4번 탭하면 학생 앱 홈으로 돌아간다.
+// 시작 화면(녹화 동의)의 제목을 4번 탭하면 학생 앱 시작 화면으로 돌아간다.
+// 마지막 화면(Who watched it)에서 왼쪽으로 밀면 선생님 앱 시작 화면으로.
 // Figma 11687:3556 ~ 11689:4200 (와이어프레임이 섞인 화면은 앱 디자인으로 맞춤)
 //   consent → notify → record → build → lecture → help → watched
 import { TODAY } from '../../data/lectures.js';
@@ -29,12 +30,16 @@ const ICON = {
   pending: '<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="9.5" stroke="#000" stroke-width="1.5" stroke-dasharray="3 3"/></svg>',
 };
 
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const mmss = (sec) => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
+
 const bars = (n) => Array.from({ length: n }, (_, i) => `<i style="animation-delay:${(i * 0.09).toFixed(2)}s"></i>`).join('');
 
 const VIEWS = {
   consent: () => `
-    <p class="top" data-exit>Once, at the start of the semester</p>
-    <h1>Recording<br />consent</h1>
+    <p class="top">Once, at the start of the semester</p>
+    <h1 data-exit>Recording<br />consent</h1>
     <p class="body">When a registered student is absent, that period is recorded automatically and turned into a lesson for that student only. We won’t ask again.</p>
     <div class="consent">
       <div class="who yes"><b>Teacher</b><span>Agreed</span></div>
@@ -42,31 +47,45 @@ const VIEWS = {
     </div>
     <button class="cta" type="button" data-next>Continue</button>`,
 
-  notify: () => `
-    <p class="top ghost" data-exit>&nbsp;</p>
-    <button class="banner" type="button" data-next>
-      <span class="banner-icon">${ICON.mic}</span>
-      <span class="banner-text"><b>Registered student absent</b><span>${PERIOD} recording started automatically</span></span>
-      <span class="banner-time">now</span>
-    </button>`,
+  // 아이폰 잠금화면에 뜨는 알림
+  notify: () => {
+    const now = new Date();
+    const time = `${now.getHours() % 12 || 12}:${String(now.getMinutes()).padStart(2, '0')}`;
+    return `
+    <div class="lock">
+      <p class="lock-date">${DAYS[now.getDay()]}, ${MONTHS[now.getMonth()]} ${now.getDate()}</p>
+      <p class="lock-time">${time}</p>
+      <button class="lock-note" type="button" data-next>
+        <span class="lock-app"><img src="assets/logo-tutu.svg" alt="" /></span>
+        <span class="lock-text">
+          <span class="lock-head"><b>Registered student absent</b><span>now</span></span>
+          <span>${PERIOD} recording started automatically</span>
+        </span>
+      </button>
+      <span class="lock-btn left"><svg width="18" height="22" viewBox="0 0 18 22" fill="none"><path d="M3 1h12v5l-3 4v11H6V10L3 6z" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg></span>
+      <span class="lock-btn right"><svg width="24" height="20" viewBox="0 0 24 20" fill="none"><path d="M2 6h5l2-3h6l2 3h5v12H2z" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="11.5" r="3.6" stroke="#fff" stroke-width="1.6"/></svg></span>
+      <span class="lock-home"></span>
+    </div>`;
+  },
 
   record: () => `
-    <p class="top" data-exit>${PERIOD}</p>
+    <p class="top">${PERIOD}</p>
     <div class="glow green">
-      <p class="clock" data-clock>12:48</p>
+      <p class="clock" data-clock>0:00</p>
       <div class="wave">${bars(12)}</div>
     </div>
-    <button class="info" type="button" data-next>
+    <button class="early" type="button" data-next>Class ended early</button>
+    <div class="info">
       <b>Stop at the 10:45 bell</b>
       <span>Then AI turns it into a lecture and sends it to the absent student.</span>
-    </button>`,
+    </div>`,
 
   build: () => `
-    <p class="top" data-exit>${PERIOD}</p>
+    <p class="top">${PERIOD}</p>
     <h1>Building<br />the lecture</h1>
     <div class="glow yellow">
       <span class="glow-check">${ICON.check}</span>
-      <p class="clock">52:30</p>
+      <p class="clock">${mmss(state.recordSec ?? 0)}</p>
     </div>
     <ul class="dots">
       <li>What you repeated</li>
@@ -75,7 +94,7 @@ const VIEWS = {
     </ul>`,
 
   lecture: () => `
-    <p class="top" data-exit>${PERIOD}</p>
+    <p class="top">${PERIOD}</p>
     <h1>AI-made<br />lecture</h1>
     <p class="sent">${ICON.check}<span>Already sent to the absent student</span></p>
     <button class="lecture-card" type="button" data-play>
@@ -95,7 +114,7 @@ const VIEWS = {
     <button class="cta" type="button" data-next>Continue</button>`,
 
   help: () => `
-    <div class="alert" data-exit><b>Might need extra help</b><span>Algebra 1 · 1 student</span></div>
+    <div class="alert"><b>Might need extra help</b><span>Algebra 1 · 1 student</span></div>
     <p class="who-label">Mateo G.</p>
     <h1 class="h-long">Still stuck on Solving Linear Equations</h1>
     <ul class="dots">
@@ -109,7 +128,7 @@ const VIEWS = {
     const done = STUDENTS.filter((s) => s.watched).length;
     const questions = STUDENTS.filter((s) => s.question).length;
     return `
-      <p class="top light" data-exit>Period 3 · Algebra 1 · Oct 27</p>
+      <p class="top light">Period 3 · Algebra 1 · Oct 27</p>
       <h1>Who watched it</h1>
       <p class="tally"><b>${done} of ${STUDENTS.length}</b><span>watched · ${questions} question</span></p>
       <ul class="students">
@@ -169,14 +188,14 @@ export default {
 
     // 화면별 움직임
     function enter(name) {
-      if (name === 'notify') later(() => view.querySelector('.banner')?.classList.add('in'), 400);
+      if (name === 'notify') later(() => view.querySelector('.lock-note')?.classList.add('in'), 500);
       if (name === 'record') {
-        // 녹화 시간이 실제로 흘러간다
-        let sec = 12 * 60 + 48;
+        // 녹음 시간이 0초부터 실제로 흘러간다 (끝나면 '강의 만드는 중'에 이 시간이 나온다)
+        state.recordSec = 0;
         const clock = view.querySelector('[data-clock]');
         timers.push(setInterval(() => {
-          sec += 1;
-          clock.textContent = `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
+          state.recordSec += 1;
+          clock.textContent = mmss(state.recordSec);
         }, 1000));
       }
       if (name === 'build') {
@@ -185,7 +204,7 @@ export default {
       }
     }
 
-    // 맨 위 작은 글씨 4번 탭 → 학생 앱으로
+    // 시작 화면 제목 4번 탭 → 학생 앱 시작 화면으로
     let exitTaps = [];
     view.addEventListener('click', (e) => {
       if (e.target.closest('[data-exit]')) {
@@ -193,7 +212,7 @@ export default {
         exitTaps = [...exitTaps.filter((t) => now - t < 1500), now];
         if (exitTaps.length >= 4) {
           state.teacherStep = null;
-          go('home', { transition: 'pop' });
+          go('onboarding', { transition: 'fade' });
         }
         return;
       }
@@ -212,6 +231,17 @@ export default {
         return e.target.closest('.question').classList.toggle('open');
       }
       if (e.target.closest('[data-reply]')) return say('Reply sent to Mateo');
+    });
+
+    // 마지막 화면(Who watched it)에서 왼쪽으로 밀면 선생님 앱 시작 화면으로
+    let swipe = null;
+    view.addEventListener('pointerdown', (e) => { swipe = { x: e.clientX, y: e.clientY }; });
+    view.addEventListener('pointerup', (e) => {
+      if (!swipe || step !== 'watched') return;
+      const dx = e.clientX - swipe.x;
+      const dy = e.clientY - swipe.y;
+      swipe = null;
+      if (dx < -60 && Math.abs(dx) > Math.abs(dy)) show('consent');
     });
 
     view.innerHTML = VIEWS[step]();

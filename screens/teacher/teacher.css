@@ -7,6 +7,7 @@
   inset: 0;
   padding: 80px 30px 0; /* 화면 좌표 = Figma 좌표 (맨 위 47pt는 상태바 자리) */
   transition: opacity 0.18s ease;
+  touch-action: none; /* 밀기 동작을 브라우저가 가로채지 않게 */
 }
 .screen-teacher .t-view.swap { opacity: 0; }
 
@@ -61,40 +62,66 @@
 .screen-teacher .who.yes { background: #fffd6c; }
 .screen-teacher .who.wait { background: #e5e5e5; color: #3a3a3a; }
 
-/* 2. 알림 배너 */
-.screen-teacher .banner {
+/* 2. 잠금화면 알림 (아이폰 잠금화면에 tutu 알림이 뜨는 모습) */
+.screen-teacher [data-step='notify'] { padding: 0; }
+.screen-teacher .lock {
   position: absolute;
-  left: 30px;
-  right: 30px;
-  top: 237px;
-  min-height: 104px;
-  padding: 20px 16px 20px 15px;
-  border-radius: 20px;
-  background: #f1f1f1;
+  inset: 0;
+  background: linear-gradient(180deg, #24523f 0%, #3f9a6e 45%, #55df94 75%, #fffd6c 100%);
+  color: #fff;
+  text-align: center;
+}
+.screen-teacher .lock-date { position: absolute; left: 0; right: 0; top: 112px; font-size: 20px; font-weight: 600; }
+.screen-teacher .lock-time { position: absolute; left: 0; right: 0; top: 132px; font-size: 96px; font-weight: 700; letter-spacing: -2px; line-height: 1.1; }
+.screen-teacher .lock-note {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: 330px;
+  padding: 13px 14px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.62);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
+  backdrop-filter: blur(20px) saturate(1.6);
+  color: #000;
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 11px;
   text-align: left;
   opacity: 0;
-  transform: translateY(-24px);
-  transition: opacity 0.35s ease, transform 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+  transform: translateY(-30px) scale(0.96);
+  transition: opacity 0.35s ease, transform 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.15);
 }
-.screen-teacher .banner.in { opacity: 1; transform: none; }
-.screen-teacher .banner-icon {
+.screen-teacher .lock-note.in { opacity: 1; transform: none; }
+.screen-teacher .lock-app {
   flex: none;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: #55df94;
-  box-shadow: 0 0 0 5px #fff;
+  width: 38px;
+  height: 38px;
+  border-radius: 9px;
+  background: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.screen-teacher .banner-text { flex: 1; display: flex; flex-direction: column; gap: 6px; }
-.screen-teacher .banner-text b { font-size: 17px; font-weight: 700; }
-.screen-teacher .banner-text span { font-size: 13px; line-height: 1.25; }
-.screen-teacher .banner-time { align-self: flex-start; margin-top: 4px; font-size: 13px; font-weight: 600; }
+.screen-teacher .lock-app img { width: 30px; height: auto; }
+.screen-teacher .lock-text { flex: 1; display: flex; flex-direction: column; gap: 2px; font-size: 15px; line-height: 1.25; }
+.screen-teacher .lock-head { display: flex; justify-content: space-between; gap: 8px; }
+.screen-teacher .lock-head b { font-weight: 600; }
+.screen-teacher .lock-head span { font-size: 13px; color: rgba(0, 0, 0, 0.5); }
+.screen-teacher .lock-btn {
+  position: absolute;
+  bottom: 50px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.screen-teacher .lock-btn.left { left: 46px; }
+.screen-teacher .lock-btn.right { right: 46px; }
+.screen-teacher .lock-home { position: absolute; left: 50%; bottom: 8px; width: 134px; height: 5px; margin-left: -67px; border-radius: 3px; background: #000; }
 
 /* 3·4. 녹화 / 강의 만드는 중: 가운데 빛 + 시간 */
 .screen-teacher .glow {
@@ -127,7 +154,19 @@
 .screen-teacher .wave i:nth-last-child(-n + 3) { background: #ababab; }
 @keyframes t-wave { 0%, 100% { transform: scaleY(0.3); } 50% { transform: scaleY(1); } }
 
-/* 녹화 안내 카드 (탭하면 수업 끝) */
+/* 수업이 일찍 끝났을 때: 안내 카드 위 회색 글씨 버튼 → 녹음 종료 */
+.screen-teacher .early {
+  position: absolute;
+  left: 24px;
+  right: 24px;
+  bottom: 160px;
+  padding: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #8e8e8e;
+  text-align: center;
+}
+/* 녹화 안내 카드 */
 .screen-teacher .info {
   position: absolute;
   left: 24px;
