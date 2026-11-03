@@ -46,7 +46,7 @@ export default {
     el.querySelector('.back').addEventListener('click', () => go('result', { transition: 'pop' }));
     // 영상은 이 화면에서 미리 받아 두고, PLAY를 누르면 바로 재생
     const lecture = TODAY[state.watching] ?? TODAY[0];
-    loadLesson(lecture.motion);
+    loadLesson(lecture);
     el.querySelector('.play').addEventListener('click', () => go('player'));
     el.querySelector('.dnd').addEventListener('click', () => {
       // TODO: 방해 금지 옵션

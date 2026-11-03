@@ -4,10 +4,12 @@
 //   꾹 누르기  : 연속 재생. 조각이 끝나도 다음 조각으로 이어서 재생 (탭하면 다시 한 조각씩)
 //   위/아래 스와이프 : 제어 화면 보이기 / 숨기기
 //   재생바 드래그 : 원하는 위치로 이동
+//   영상 속 인터랙션(카드 고르기, 끌어다 놓기) 지점에 오면 멈추고, 학생이 조작을 끝내면 이어서 재생
 /* global lottie */
 import { TODAY } from '../../data/lectures.js';
 import { state } from '../../js/state.js';
 import { loadLesson } from '../../js/lessons.js';
+import { create as createInteraction } from '../../js/interactions.js';
 
 const HOLD_MS = 400;
 const SWIPE_PX = 40;
@@ -85,11 +87,50 @@ export default {
     let baseTime = 0;
     let raf = 0;
     let disposed = false;
+    let gates = [];            // 영상 속 인터랙션 (at 프레임 순)
+    let awaiting = null;       // 지금 조작을 기다리는 인터랙션
 
     // 화면 좌표 → 가로 화면 좌표
     function toLand(e) {
       const r = el.getBoundingClientRect();
       return { x: r.height - (e.clientY - r.top), y: e.clientX - r.left };
+    }
+
+    // 포인터 → Lottie svg 좌표 (영상은 화면을 꽉 채우도록 잘려서 그려진다)
+    function toSvg(e) {
+      const p = toLand(e);
+      const { w, h } = lesson.data;
+      const W = land.offsetWidth;
+      const H = land.offsetHeight;
+      const s = Math.max(W / w, H / h);
+      return { x: (p.x - (W - w * s) / 2) / s, y: (p.y - (H - h * s) / 2) / s };
+    }
+
+    // 인터랙션 지점에서 멈추기
+    function stopAt(g) {
+      frame = g.at;
+      playing = false;
+      awaiting = g;
+      render();
+    }
+    // 조작이 끝나면 이어서 재생 (한 조각 재생 중 그 조각 끝이었으면 다음 조각으로)
+    function finish(g) {
+      g.done = true;
+      awaiting = null;
+      if (continuous) return play();
+      const s = lesson.segments[seg];
+      if (frame >= s.end - STEP_STOP_EARLY - 2) return playSegment(seg + 1);
+      play();
+    }
+    // 뒤로 돌아가면 그 뒤의 인터랙션은 다시 할 수 있게
+    function resetGatesAfter(f) {
+      awaiting = null;
+      for (const g of gates) {
+        if (g.at > f && g.done) {
+          g.done = false;
+          g.reset();
+        }
+      }
     }
 
     function segmentAt(f) {
@@ -122,7 +163,10 @@ export default {
     function tick(now) {
       raf = requestAnimationFrame(tick);
       if (!playing) return;
+      const prev = frame;
       frame = baseFrame + ((now - baseTime) / 1000) * lesson.fr;
+      const gate = gates.find((g) => !g.done && prev < g.at && frame >= g.at);
+      if (gate) return stopAt(gate);
       const s = lesson.segments[seg];
       const last = seg === lesson.segments.length - 1; // 마지막 조각은 끝까지 (다 본 것으로 기록)
       const end = continuous || last ? s.end : Math.max(s.start, s.end - STEP_STOP_EARLY);
@@ -138,6 +182,7 @@ export default {
     }
 
     function play(fromFrame = frame) {
+      if (fromFrame < frame) resetGatesAfter(fromFrame);
       frame = fromFrame;
       baseFrame = frame;
       baseTime = performance.now();
@@ -157,6 +202,9 @@ export default {
 
     function nextSegment() {
       // 지금 조각을 다 봤으면 다음 조각, 아직 재생 중이면 바로 다음 조각
+      const next = lesson.segments[seg + 1];
+      const skipped = next && gates.find((g) => !g.done && g.at >= frame && g.at <= next.start);
+      if (skipped) return stopAt(skipped); // 인터랙션은 건너뛰지 않는다
       if (seg + 1 < lesson.segments.length) playSegment(seg + 1);
       else if (!playing) playSegment(0);
     }
@@ -180,7 +228,10 @@ export default {
           break;
         }
       }
-      frame = Math.min(f, lesson.data.op);
+      f = Math.min(f, lesson.data.op);
+      if (f < frame) resetGatesAfter(f);
+      awaiting = null;
+      frame = f;
       seg = segmentAt(frame);
       render();
     }
@@ -199,7 +250,14 @@ export default {
       }
       if (e.target.closest('button')) return; // 버튼은 click으로 처리
 
-      gesture = { type: 'touch', id: e.pointerId, start, moved: false, held: false };
+      // 끌어다 놓기 인터랙션
+      if (awaiting?.down?.(e)) {
+        gesture = { type: 'gate', id: e.pointerId };
+        return;
+      }
+
+      gesture = { type: 'touch', id: e.pointerId, start, moved: false, held: false, target: e.target };
+      if (awaiting) return; // 조작을 기다리는 동안은 꾹 누르기(연속 재생) 없음
       gesture.timer = setTimeout(() => {
         // 꾹 누르기: 연속 재생
         gesture.held = true;
@@ -211,6 +269,7 @@ export default {
     land.addEventListener('pointermove', (e) => {
       if (!gesture || e.pointerId !== gesture.id) return;
       if (gesture.type === 'seek') return seekTo(e);
+      if (gesture.type === 'gate') return awaiting?.move(e);
       const p = toLand(e);
       if (Math.hypot(p.x - gesture.start.x, p.y - gesture.start.y) > MOVE_SLOP) {
         gesture.moved = true;
@@ -226,6 +285,7 @@ export default {
         if (g.wasPlaying) play();
         return;
       }
+      if (g.type === 'gate') return awaiting?.up(e);
       clearTimeout(g.timer);
       if (g.held) return;
       const p = toLand(e);
@@ -234,6 +294,7 @@ export default {
         if (Math.abs(dy) > SWIPE_PX && Math.abs(dy) > Math.abs(p.x - g.start.x)) showControls(dy < 0);
         return;
       }
+      if (awaiting) return awaiting.tap?.({ target: g.target }); // 카드 고르기 (다른 곳 탭은 무시)
       nextSegment();
     });
     land.addEventListener('pointercancel', () => {
@@ -243,6 +304,7 @@ export default {
 
     el.querySelector('.back').addEventListener('click', () => go('lecture', { transition: 'pop' }));
     toggleBtn.addEventListener('click', () => {
+      if (awaiting) return; // 조작을 끝내야 이어서 재생
       if (playing) return pause();
       if (frame >= lesson.data.op) return playSegment(0);
       play();
@@ -255,7 +317,7 @@ export default {
       // TODO: 마스코트 기능
     });
 
-    loadLesson(lecture.motion).then((l) => {
+    loadLesson(lecture).then((l) => {
       if (disposed) return;
       lesson = l;
       bar.innerHTML = l.scenes.map((s) => `<div class="seg" style="flex:${s.end - s.start}"><i></i></div>`).join('');
@@ -267,8 +329,20 @@ export default {
         animationData: l.data,
         rendererSettings: { preserveAspectRatio: 'xMidYMid slice' },
       });
-      raf = requestAnimationFrame(tick);
-      playSegment(0);
+      // 영상 요소가 다 그려진 뒤 인터랙션 연결 → 재생 시작
+      const start = () => {
+        const svg = el.querySelector('.video svg');
+        gates = (lecture.interactions ?? [])
+          .map((it) => {
+            const g = createInteraction(it, svg, toSvg, () => finish(g));
+            return g;
+          })
+          .sort((a, b) => a.at - b.at);
+        raf = requestAnimationFrame(tick);
+        playSegment(0);
+      };
+      if (anim.isLoaded) start();
+      else anim.addEventListener('DOMLoaded', start);
     });
 
     return () => {

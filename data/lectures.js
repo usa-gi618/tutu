@@ -2,6 +2,9 @@
 // 설명·퀴즈는 임시 문구 (설명 형식: In today’s class, we learned ...).
 // quiz.answer = 정답 options 인덱스. 'Not sure yet'은 화면에서 자동으로 붙는다.
 // motion = 강의 영상(Lottie). length·scenes는 그 파일 기준 (scenes = 마커 앞 번호 01, 02 ... 개수).
+// interactions = 영상 속 인터랙션. at = 영상을 멈추고 조작을 기다리는 프레임 (js/interactions.js)
+//   choose: options 레이어 중 하나를 탭. freeze = 영상에 미리 들어 있는 정답 강조를 지울 레이어와 시작 프레임
+//   drag  : layer의 도형 묶음(groups)을 떼어 as 이름으로 만들고, target 레이어 위로 끌어다 놓기
 export const TODAY = [
   {
     subject: 'Biology',
@@ -11,6 +14,12 @@ export const TODAY = [
     length: '0:56',
     scenes: 6,
     checks: 1,
+    interactions: [
+      // 01 예측: Soil / Water / Air 중 하나 고르기 (원래 영상은 Soil을 자동으로 강조)
+      { type: 'choose', at: 197, options: ['choice-soil', 'choice-water', 'choice-air'], freeze: { layer: 'choice-soil', from: 200 } },
+      // 02 무게 재기: 화분+묘목(drop-zone의 도형 1~3)을 저울 위로 끌어다 놓기
+      { type: 'drag', at: 352, layer: 'drop-zone', groups: [1, 2, 3], as: 'drag-item', target: 'scale' },
+    ],
     description: 'In today’s class, we learned how van Helmont’s experiment showed that a tree’s mass doesn’t come from the soil, and how light turns carbon dioxide and water into glucose.',
     quiz: {
       question: 'Where does most of a tree’s mass come from?',
