@@ -192,6 +192,17 @@
   background: #fff;
   border: 2px solid #000;
 }
+/* 학생이 고르거나 조작해야 하는 지점 (Figma: 재생바 위 7px 검은 점) */
+.screen-player .gate-dot {
+  position: absolute;
+  top: 7px;
+  width: 7px;
+  height: 7px;
+  margin-left: -3.5px;
+  border-radius: 50%;
+  background: #000;
+  pointer-events: none;
+}
 
 /* 마스코트 버튼 */
 .screen-player .mascot {

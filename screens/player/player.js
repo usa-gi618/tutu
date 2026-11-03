@@ -139,21 +139,30 @@ export default {
       return 0;
     }
 
+    // 프레임 → 재생바 위 x (장면 구간 사이 틈을 고려)
+    function barX(f) {
+      for (let i = 0; i < lesson.scenes.length; i += 1) {
+        const s = lesson.scenes[i];
+        if (f <= s.end || i === lesson.scenes.length - 1) {
+          const segEl = bar.children[i];
+          const p = Math.max(0, Math.min(1, (f - s.start) / (s.end - s.start)));
+          return segEl.offsetLeft + segEl.offsetWidth * p;
+        }
+      }
+      return 0;
+    }
+
     function render() {
       anim.goToAndStop(frame, true);
       timeText.textContent = `${clock(frame / lesson.fr)} / ${clock(lesson.total / lesson.fr)}`;
       // 재생바
-      let headX = 0;
       lesson.scenes.forEach((s, i) => {
         const fill = bar.children[i].firstElementChild;
         const p = Math.max(0, Math.min(1, (frame - s.start) / (s.end - s.start)));
         fill.style.width = `${p * 100}%`;
-        if (frame >= s.start && frame <= s.end) {
-          const segEl = bar.children[i];
-          headX = segEl.offsetLeft + segEl.offsetWidth * p;
-        }
       });
-      head.style.left = `${headX}px`;
+      head.style.left = `${barX(frame)}px`;
+      gates.forEach((g) => { g.dot.style.left = `${barX(g.at)}px`; });
       if (toggleBtn.dataset.playing !== String(playing)) {
         toggleBtn.dataset.playing = playing;
         toggleBtn.innerHTML = playing ? ICON_PAUSE : ICON_PLAY;
@@ -335,6 +344,10 @@ export default {
         gates = (lecture.interactions ?? [])
           .map((it) => {
             const g = createInteraction(it, svg, toSvg, () => finish(g));
+            // 재생바 위 검은 점: 학생이 고르거나 조작해야 하는 지점
+            g.dot = document.createElement('i');
+            g.dot.className = 'gate-dot';
+            progress.append(g.dot);
             return g;
           })
           .sort((a, b) => a.at - b.at);

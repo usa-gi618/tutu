@@ -46,9 +46,10 @@
   background: #f1f1f1;
 }
 .screen-result .card + .card { margin-top: 12px; }
-.screen-result .card.review { background: #fffd6c; cursor: pointer; }
+.screen-result .card { cursor: pointer; }
+.screen-result .card.review { background: #fffd6c; }
 
-/* 선택: 고른 Review 카드는 앞으로 나와 둥둥 떠 있고, 나머지 카드는 살짝 흐려진다 */
+/* 선택: 고른 카드는 앞으로 나와 둥둥 떠 있고, 나머지 카드는 살짝 흐려진다 */
 .screen-result .card {
   transition: scale 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.2), box-shadow 0.35s ease, filter 0.3s ease;
 }
