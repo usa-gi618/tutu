@@ -43,7 +43,14 @@ export default {
 
     return `
       <div class="scroll">
-        <h1 class="heading">${heading}</h1>
+        <div class="title-row">
+          <button class="back" type="button" aria-label="Back to home">
+            <svg width="24" height="36" viewBox="0 0 24 36" fill="none">
+              <path d="M17 7 L6 18 L17 29" stroke="#000" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
+          <h1 class="heading">${heading}</h1>
+        </div>
         ${section(passed, 'pass')}
         ${section(review, 'review')}
       </div>
@@ -70,6 +77,8 @@ export default {
       const index = Number(c.dataset.index);
       select(index === selected ? -1 : index);
     });
+
+    el.querySelector('.back').addEventListener('click', () => go('home', { transition: 'pop' }));
 
     cta.addEventListener('click', () => {
       if (selected === -1) return;

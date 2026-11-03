@@ -14,6 +14,20 @@
 }
 .screen-result .scroll::-webkit-scrollbar { display: none; }
 
+/* 제목 + 왼쪽 뒤로 가기(<) */
+.screen-result .title-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  margin-left: -6px; /* < 아이콘의 여백만큼 당겨서 제목 왼쪽 줄을 맞춘다 */
+}
+.screen-result .back {
+  flex: none;
+  width: 24px;
+  height: 57.6px; /* 제목 첫 줄 높이에 가운데 */
+  display: flex;
+  align-items: center;
+}
 .screen-result .heading {
   font-size: 48px;
   font-weight: 700;
