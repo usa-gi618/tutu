@@ -25,8 +25,16 @@
   <script type="module" src="js/app.js"></script>
   <script>
     // 개발용 라이브 리로드 (serve.py로 띄웠을 때만 동작)
+    // 보고 있는 탭만 연결한다 (뒤에 쌓인 탭들이 연결을 붙잡으면 브라우저 연결 수가 차서 새 페이지가 안 뜬다)
     if (location.port === '8000') {
-      new EventSource('/__livereload').onmessage = () => location.reload();
+      let live = null;
+      const connect = () => {
+        live?.close();
+        live = document.hidden ? null : new EventSource('/__livereload');
+        if (live) live.onmessage = () => location.reload();
+      };
+      document.addEventListener('visibilitychange', connect);
+      connect();
     }
   </script>
 </body>
