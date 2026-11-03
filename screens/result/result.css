@@ -1,0 +1,119 @@
+/* Figma 11565:3943 (You already get this one) */
+
+.screen-result { background: linear-gradient(to bottom, #ffffe2 0%, #fff 35.799%); }
+
+/* 카드가 많으면 버튼 위까지 스크롤 */
+.screen-result .scroll {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  padding: 65px 24px 140px;
+}
+.screen-result .scroll::-webkit-scrollbar { display: none; }
+
+.screen-result .heading {
+  font-size: 48px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -1.44px;
+}
+
+.screen-result .label {
+  margin: 14px 0 11px;
+  font-size: 18px;
+  font-weight: 510;
+  line-height: 1.6;
+  letter-spacing: -0.72px;
+}
+.screen-result .section + .section .label { margin-top: 27px; }
+.screen-result .label b {
+  font-weight: 700;
+  background: #fffd6c;
+  border-radius: 4px;
+  mix-blend-mode: multiply;
+  padding: 0 1px;
+}
+
+/* 카드 380 x 168 */
+.screen-result .card {
+  position: relative;
+  height: 168px;
+  border-radius: 20px;
+  overflow: hidden;
+  background: #f1f1f1;
+}
+.screen-result .card + .card { margin-top: 12px; }
+.screen-result .card.review { background: #fffd6c; cursor: pointer; }
+
+/* 선택: 고른 Review 카드는 앞으로 나와 둥둥 떠 있고, 나머지 카드는 살짝 흐려진다 */
+.screen-result .card {
+  transition: scale 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.2), box-shadow 0.35s ease, filter 0.3s ease;
+}
+.screen-result .scroll.has-selected .card:not(.selected) { filter: blur(0.6px); }
+.screen-result .card.selected {
+  z-index: 1;
+  scale: 1.03;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.06);
+  animation: result-float 3s ease-in-out infinite;
+}
+@keyframes result-float {
+  0%, 100% { translate: 0 -2px; }
+  50% { translate: 0 -5px; }
+}
+
+.screen-result .card-globe {
+  position: absolute;
+  left: 214px;
+  top: 14px;
+  width: 220.724px;
+  height: 277.966px;
+  mix-blend-mode: multiply;
+}
+.screen-result .card .subject { left: 23px; top: 33.6px; font-size: 20px; font-weight: 700; line-height: 1.2; letter-spacing: -0.8px; }
+.screen-result .card .title { left: 23.24px; top: 58.72px; font-size: 15px; font-weight: 510; line-height: 1.2; letter-spacing: -0.6px; }
+.screen-result .card .period { left: 268.4px; top: 29.64px; font-size: 15px; font-weight: 510; line-height: 1.2; letter-spacing: -0.6px; color: #5b5b5b; }
+
+/* Pass / Review 도장: 흰색 번짐 위에 글자 */
+.screen-result .stamp {
+  position: absolute;
+  top: 127.5px;
+  transform: translateY(-50%);
+  font-size: 64px;
+  font-weight: 590;
+  font-style: italic;
+  line-height: 1.2;
+  letter-spacing: -2.56px;
+  white-space: nowrap;
+  text-shadow: 0 0 4px #fff;
+}
+.screen-result .card.pass .stamp { left: 239px; color: #8b8b8b; }
+.screen-result .card.review .stamp { right: 13px; top: 129.5px; color: #323232; }
+
+.screen-result .fade {
+  position: absolute;
+  left: 0;
+  top: 801px;
+  width: 428px;
+  height: 125px;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0), #fff);
+  pointer-events: none;
+}
+.screen-result .cta {
+  position: absolute;
+  left: 24px;
+  top: 844px;
+  width: 380px;
+  height: 64px;
+  border-radius: 8px;
+  background: #000;
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.2;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+/* Figma 11565:5486 (비활성 버튼) */
+.screen-result .cta:disabled { background: #e8e8e8; color: #949494; cursor: default; }

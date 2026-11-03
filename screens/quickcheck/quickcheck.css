@@ -1,0 +1,78 @@
+/* Figma 11565:3916 (Quick check) */
+
+.screen-quickcheck { background: linear-gradient(to bottom, #ffffe2 0%, #fff 35.799%); }
+
+.screen-quickcheck .heading {
+  left: 30px;
+  top: 94px;
+  font-size: 48px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -1.44px;
+}
+
+/* 문제가 바뀔 때 페이드 */
+.screen-quickcheck .body { position: absolute; inset: 0; transition: opacity 0.2s ease; }
+.screen-quickcheck .body.swapping { opacity: 0; }
+
+.screen-quickcheck .lecture {
+  position: absolute;
+  left: 30px;
+  top: 128px;
+  width: 368px;
+  height: 76px;
+  border-radius: 8px;
+  background: #f1f1f1;
+}
+.screen-quickcheck .lecture .subject { left: 16px; top: 26px; font-size: 20px; font-weight: 700; line-height: 1.2; letter-spacing: -0.8px; }
+.screen-quickcheck .lecture .title { left: 19px; top: 53px; font-size: 15px; font-weight: 510; line-height: 1.2; letter-spacing: -0.6px; }
+
+.screen-quickcheck .question {
+  position: absolute;
+  left: 31px;
+  top: 256px;
+  width: 315px;
+  transform: translateY(-50%);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.8px;
+}
+
+.screen-quickcheck .option {
+  position: absolute;
+  left: 30px;
+  width: 368px;
+  height: 54px;
+  padding: 10px 20px;
+  border-radius: 16px;
+  background: #f1f1f1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.6px;
+  transition: background-color 0.2s ease, transform 0.15s ease;
+}
+.screen-quickcheck .option:active { transform: scale(0.98); }
+.screen-quickcheck .option.selected { background: #55df94; }
+
+.screen-quickcheck .cta {
+  position: absolute;
+  left: 24px;
+  top: 841px;
+  width: 380px;
+  height: 64px;
+  border-radius: 8px;
+  background: #000;
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.2;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+/* Figma 11565:5486 (비활성 버튼) */
+.screen-quickcheck .cta:disabled { background: #e8e8e8; color: #949494; cursor: default; }

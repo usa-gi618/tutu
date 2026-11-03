@@ -1,0 +1,134 @@
+/* Figma 11565:3790 (Up next) */
+
+.screen-home { background: linear-gradient(to bottom, #ffffe2 0%, #fff 35.799%); }
+
+.screen-home .heading {
+  left: 30px;
+  top: 94px;
+  font-size: 48px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -1.44px;
+}
+
+.screen-home .summary {
+  left: 31px;
+  top: 139.5px;
+  font-size: 16px;
+  line-height: 1.2;
+  letter-spacing: -0.64px;
+}
+
+.screen-home .library-btn {
+  position: absolute;
+  left: 368px;
+  top: 85px;
+  width: 33px;
+  height: 29.853px;
+  z-index: 20;
+}
+
+/* 요일 */
+.screen-home .days {
+  position: absolute;
+  left: 30px;
+  top: 164px;
+  display: flex;
+  gap: 8px;
+  z-index: 20;
+}
+.screen-home .day { position: relative; flex: none; width: 63px; height: 77px; border-radius: 12px; background: #f1f1f1; }
+.screen-home .day.done { background: #fffd6c; }
+.screen-home .day.today { background: #55df94; }
+.screen-home .day .num { position: absolute; top: 16px; font-size: 19px; font-weight: 700; line-height: 1.2; letter-spacing: -0.76px; white-space: nowrap; }
+.screen-home .day .dow { position: absolute; top: 43px; font-size: 14px; font-weight: 400; line-height: 1.2; white-space: nowrap; }
+
+/* 카드 드럼: 드래그 영역 */
+.screen-home .deck {
+  position: absolute;
+  inset: 0;
+  touch-action: none;
+  isolation: isolate; /* 카드 z-index가 헤더·하단 버튼 위로 올라가지 않게 */
+}
+
+/* 카드 하나 (Figma 11565:4239, 380 x 256). 위치/크기는 JS가 매 프레임 transform으로 지정 */
+.screen-home .card {
+  position: absolute;
+  left: 24px;
+  top: 0;
+  width: 380px;
+  height: 256px;
+  transform-origin: 50% 0;
+  will-change: transform, opacity;
+}
+
+/* 누름 상태 연출 담당 (뽑힘 / 밀려남 + 흐림) */
+.screen-home .card-lift {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 20px;
+  background: #f1f1f1;
+  box-shadow: 0 -6px 18px rgba(0, 0, 0, 0.06);
+  transition:
+    transform 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.2),
+    filter 0.3s ease,
+    background-color 0.25s ease;
+}
+.screen-home .deck.has-pressed .card:not(.pressed) .card-lift { transform: translateY(18px); filter: blur(1.2px); }
+.screen-home .card.pressed .card-lift { transform: translateY(-30px); background: #55df94; }
+
+/* 지구본: 카드 밖은 잘리고 카드 색과 multiply */
+.screen-home .card-globe {
+  position: absolute;
+  left: 214px;
+  top: 14px;
+  width: 220.724px;
+  height: 277.966px;
+  mix-blend-mode: multiply;
+}
+
+.screen-home .card .subject { left: 23px; top: 34.1px; font-size: 24px; font-weight: 700; line-height: 1.2; }
+.screen-home .card .title { left: 23.24px; top: 63px; font-size: 15px; font-weight: 510; line-height: 1.2; letter-spacing: -0.45px; }
+.screen-home .card .period { left: 268.4px; top: 29.64px; font-size: 15px; font-weight: 510; line-height: 1.2; letter-spacing: -0.6px; color: #5b5b5b; transition: color 0.25s ease; }
+.screen-home .card .description {
+  position: absolute;
+  left: 23.24px;
+  top: 192px;
+  width: 331px;
+  transform: translateY(-50%);
+  font-size: 15px;
+  font-weight: 510;
+  line-height: 1.6;
+  letter-spacing: -0.45px;
+  color: #515151;
+  transition: color 0.25s ease;
+}
+.screen-home .card.pressed .period { color: #343434; }
+.screen-home .card.pressed .description { color: #1a1a1a; }
+
+/* 하단 */
+.screen-home .fade {
+  position: absolute;
+  left: 0;
+  top: 801px;
+  width: 428px;
+  height: 125px;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0), #fff);
+  pointer-events: none;
+  z-index: 20;
+}
+.screen-home .cta {
+  position: absolute;
+  left: 26px;
+  top: 841px;
+  width: 380px;
+  height: 64px;
+  border-radius: 8px;
+  background: #000;
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.2;
+  z-index: 21;
+}

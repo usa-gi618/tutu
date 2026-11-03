@@ -1,0 +1,210 @@
+/* Figma 11540:2496 (영상 + 제어 화면, 가로)
+   강의 시작 화면처럼 가로(926 x 428) 좌표로 배치하고 통째로 돌려서 세로 화면에 넣는다. */
+
+.screen-player .land {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 926px;
+  height: 428px;
+  transform-origin: 0 0;
+  transform: translateY(926px) rotate(-90deg);
+  background: #f1f1f1;
+  overflow: hidden;
+  touch-action: none;
+}
+
+.screen-player .video { position: absolute; inset: 0; }
+.screen-player .video svg { display: block; }
+
+/* 제어 화면: 위로 스와이프하면 나타나고 아래로 스와이프하면 숨는다 */
+.screen-player .controls {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.screen-player .controls.show { opacity: 1; pointer-events: auto; }
+
+.screen-player .shade {
+  position: absolute;
+  inset: 0;
+  opacity: 0.8;
+  mix-blend-mode: multiply;
+  background: linear-gradient(180deg, #8f8f8f 0%, #fff 37.981%, #fff 56.25%, #8f8f8f 100%);
+  pointer-events: none;
+}
+
+/* 반투명 회색 버튼 공통: 배경만 multiply, 안의 흰 아이콘·글자는 그대로 */
+.screen-player .glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: #e5e5e5;
+  mix-blend-mode: multiply;
+}
+.screen-player .glass > * { position: relative; }
+
+.screen-player .back {
+  position: absolute;
+  left: 26px;
+  top: 22px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+}
+.screen-player .back svg { position: absolute; left: 0; top: 0; }
+
+.screen-player .title {
+  position: absolute;
+  left: 94px;
+  top: 23px;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.72px;
+  color: #fff;
+  white-space: nowrap;
+}
+.screen-player .subject {
+  position: absolute;
+  left: 94px;
+  top: 52px;
+  font-size: 18px;
+  font-weight: 510;
+  line-height: 1.6;
+  letter-spacing: -0.72px;
+  color: #fff;
+  white-space: nowrap;
+}
+
+/* 언어 전환 EN / ES */
+.screen-player .lang {
+  position: absolute;
+  left: 764px;
+  top: 23px;
+  width: 133px;
+  height: 47px;
+  border-radius: 33px;
+}
+.screen-player .lang-thumb {
+  position: absolute;
+  left: 768px;
+  top: 26px;
+  width: 72px;
+  height: 40px;
+  border-radius: 33px;
+  background: #111;
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), width 0.25s ease;
+}
+.screen-player .lang-thumb.es { transform: translateX(72px); width: 53px; }
+.screen-player .lang-btn {
+  position: absolute;
+  top: 26px;
+  height: 40px;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 40px;
+  letter-spacing: -0.64px;
+  color: #fff;
+  text-align: center;
+}
+.screen-player .lang-btn.en { left: 768px; width: 72px; }
+.screen-player .lang-btn.es { left: 840px; width: 53px; }
+
+/* 재생 / 일시정지 */
+.screen-player .toggle {
+  position: absolute;
+  left: 24px;
+  top: 345px;
+  width: 59px;
+  height: 59px;
+  border-radius: 50%;
+}
+.screen-player .toggle svg { position: absolute; left: 0; top: 0; }
+
+/* 시간 */
+.screen-player .time {
+  position: absolute;
+  left: 105px;
+  top: 361px;
+  min-width: 93px;
+  height: 35px;
+  padding: 0 14px;
+  border-radius: 33px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.screen-player .time span {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.6;
+  letter-spacing: -0.56px;
+  color: #fff;
+  white-space: nowrap;
+}
+
+/* 재생바: 장면마다 한 구간, 들은 부분은 검정 */
+.screen-player .progress {
+  position: absolute;
+  left: 205px;
+  top: 358px;
+  width: 565px;
+  height: 42px; /* 손가락으로 잡기 쉽게 넓은 터치 영역 */
+}
+.screen-player .bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 19px;
+  height: 3px;
+  display: flex;
+  gap: 6px;
+}
+.screen-player .seg {
+  position: relative;
+  height: 3px;
+  border-radius: 1.5px;
+  background: #e5e5e5;
+  mix-blend-mode: multiply;
+  overflow: hidden;
+}
+.screen-player .seg i {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  background: #000;
+  border-radius: 1.5px;
+}
+.screen-player .head {
+  position: absolute;
+  top: 16px;
+  width: 9px;
+  height: 9px;
+  margin-left: -4.5px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #000;
+}
+
+/* 마스코트 버튼 */
+.screen-player .mascot {
+  position: absolute;
+  left: 793px;
+  top: 340px;
+  width: 109px;
+  height: 60px;
+}
+.screen-player .mascot .face {
+  position: absolute;
+  left: 38px;
+  top: 7px;
+  width: 38px;
+  height: 40px;
+  transform: rotate(90deg); /* Figma에서 세로 기준으로 그려진 아이콘 */
+}

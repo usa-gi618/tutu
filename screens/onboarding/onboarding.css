@@ -1,0 +1,19 @@
+.screen-onboarding .logo {
+  left: 143px;
+  top: 434.82px;
+  width: 141px;
+  height: 43.922px;
+}
+
+.screen-onboarding .tagline {
+  position: absolute;
+  left: 50%;
+  top: 509.5px;
+  transform: translate(-50%, -50%);
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: -0.72px;
+  text-align: center;
+  white-space: nowrap;
+}

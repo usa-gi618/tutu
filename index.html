@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="tutu" />
+  <meta name="theme-color" content="#ffffff" />
+  <link rel="manifest" href="manifest.json" />
+  <title>tutu</title>
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="screens/onboarding/onboarding.css" />
+  <link rel="stylesheet" href="screens/home/home.css" />
+  <link rel="stylesheet" href="screens/quickcheck/quickcheck.css" />
+  <link rel="stylesheet" href="screens/result/result.css" />
+  <link rel="stylesheet" href="screens/library/library.css" />
+  <link rel="stylesheet" href="screens/lecture/lecture.css" />
+  <link rel="stylesheet" href="screens/player/player.css" />
+</head>
+<body>
+  <main class="stage" id="stage"></main>
+  <script src="vendor/lottie_svg.min.js"></script>
+  <script type="module" src="js/app.js"></script>
+  <script>
+    // 개발용 라이브 리로드 (serve.py로 띄웠을 때만 동작)
+    if (location.port === '8000') {
+      new EventSource('/__livereload').onmessage = () => location.reload();
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,145 @@
+/* Figma 11565:4029 (Library) */
+
+.screen-library { background: linear-gradient(to bottom, #ffffe2 0%, #fff 35.799%); }
+
+.screen-library .heading {
+  position: absolute;
+  left: 31px;
+  top: 65px;
+  font-size: 48px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -1.44px;
+  white-space: nowrap;
+}
+.screen-library .home-btn {
+  position: absolute;
+  left: 363px;
+  top: 75px;
+  width: 39px;
+  height: 39px;
+}
+
+/* 과목 필터: 가로 스크롤 */
+.screen-library .chips {
+  position: absolute;
+  left: 0;
+  top: 129px;
+  width: 428px;
+  display: flex;
+  gap: 8px;
+  padding: 0 21px;
+  overflow-x: auto;
+  touch-action: pan-x;
+  scrollbar-width: none;
+}
+.screen-library .chips::-webkit-scrollbar { display: none; }
+.screen-library .chip {
+  flex: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  background: #f1f1f1;
+  color: #acacac;
+  font-size: 14px;
+  font-weight: 510;
+  line-height: 1.2;
+  letter-spacing: -0.56px;
+  white-space: nowrap;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+.screen-library .chip.active { background: #373737; color: #fff; }
+
+/* 카드 목록: 세로 스크롤, 2열 */
+.screen-library .list {
+  position: absolute;
+  left: 0;
+  top: 170px;
+  width: 428px;
+  bottom: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  scrollbar-width: none;
+  padding: 15px 20px 60px;
+  display: grid;
+  grid-template-columns: 185px 185px;
+  grid-auto-rows: 168px;
+  column-gap: 18px;
+  row-gap: 15px;
+  align-content: start;
+}
+.screen-library .list::-webkit-scrollbar { display: none; }
+
+/* 카드 185 x 168 */
+.screen-library .card {
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  background: #f1f1f1;
+}
+.screen-library .card.watched { background: #3c3c3c; }
+.screen-library .card.todo { background: #fffd6c; }
+
+.screen-library .card-globe {
+  position: absolute;
+  left: 73px;
+  top: 51px;
+  width: 220.724px;
+  height: 277.966px;
+  mix-blend-mode: multiply;
+}
+.screen-library .card.watched .card-globe { display: none; }
+
+.screen-library .card .title {
+  position: absolute;
+  left: 17px;
+  top: 14.6px;
+  width: 165px;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.8px;
+}
+.screen-library .card .period {
+  position: absolute;
+  left: 17px;
+  top: 73.5px;
+  transform: translateY(-50%);
+  font-size: 11px;
+  font-weight: 510;
+  line-height: 1.2;
+  letter-spacing: -0.44px;
+  color: #5b5b5b;
+  white-space: nowrap;
+}
+.screen-library .card .status {
+  position: absolute;
+  left: 18px;
+  top: 148.5px;
+  transform: translateY(-50%);
+  font-size: 16px;
+  font-weight: 510;
+  line-height: 1.2;
+  letter-spacing: -0.64px;
+  color: #323232;
+  white-space: nowrap;
+}
+.screen-library .card.watched .title { color: #fff; }
+.screen-library .card.watched .period,
+.screen-library .card.watched .status { color: #999; }
+
+.screen-library .card .action {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  background: #000;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 510;
+  line-height: 1.2;
+  letter-spacing: -0.56px;
+  white-space: nowrap;
+}
+.screen-library .card.watched .action { background: #fff; color: #000; }
