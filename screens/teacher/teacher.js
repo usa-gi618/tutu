@@ -38,7 +38,7 @@ const VIEWS = {
     <p class="body">When a registered student is absent, that period is recorded automatically and turned into a lesson for that student only. We won’t ask again.</p>
     <div class="consent">
       <div class="who yes"><b>Teacher</b><span>Agreed</span></div>
-      <div class="who wait"><b>Parents</b><span>Awaiting approval</span></div>
+      <div class="who wait"><b>Principal</b><span>Awaiting approval</span></div>
     </div>
     <button class="cta" type="button" data-next>Continue</button>`,
 
