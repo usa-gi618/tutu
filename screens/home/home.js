@@ -3,6 +3,7 @@
 // 카드를 탭하면 선택: 초록색으로 위로 뽑히고, 나머지는 아래로 밀리며 흐려진다.
 // 같은 카드를 다시 탭하거나, 빈 곳을 탭하거나, 드래그하면 선택 해제(모두 회색).
 import { TODAY } from '../../data/lectures.js';
+import { state } from '../../js/state.js';
 
 const DAYS = [
   { num: 19, dow: 'Mon', state: 'done', numX: 20, dowX: 17 },
@@ -175,6 +176,17 @@ export default {
     deck.addEventListener('pointercancel', onUp);
 
     el.querySelector('.library-btn').addEventListener('click', () => go('library'));
+    // 숨은 입구: "Up next" 제목을 빠르게 4번 탭하면 선생님 앱 (임시, 나중에 별도 앱으로)
+    let titleTaps = [];
+    el.querySelector('.heading').addEventListener('click', () => {
+      const now = performance.now();
+      titleTaps = [...titleTaps.filter((t) => now - t < 1500), now];
+      if (titleTaps.length >= 4) {
+        titleTaps = [];
+        state.teacherStep = null;
+        go('teacher');
+      }
+    });
     el.querySelector('.cta').addEventListener('click', () => go('quickcheck'));
 
     draw();

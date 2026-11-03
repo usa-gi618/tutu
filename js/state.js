@@ -18,4 +18,6 @@ export const state = {
   rewatch: null,
   // 복습까지 마친 강의 (TODAY 인덱스)
   mastered: new Set(),
+  // 선생님 앱에서 보고 있던 화면 (학생 플레이어로 미리 보기 갔다가 돌아올 때)
+  teacherStep: null,
 };

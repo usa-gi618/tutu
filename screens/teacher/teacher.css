@@ -1,0 +1,304 @@
+/* 선생님 앱 (Figma 11687:3556 ~ 11689:4200). 와이어프레임 부분은 학생 앱 디자인으로 맞춤:
+   SF Pro, 큰 제목 48 Bold, 회색 카드 #f1f1f1 · 둥근 20, 검정 CTA, 강조는 노랑 / 초록 */
+
+.screen-teacher { background: #fff; }
+.screen-teacher .t-view {
+  position: absolute;
+  inset: 0;
+  padding: 80px 30px 0; /* 화면 좌표 = Figma 좌표 (맨 위 47pt는 상태바 자리) */
+  transition: opacity 0.18s ease;
+}
+.screen-teacher .t-view.swap { opacity: 0; }
+
+.screen-teacher .top { font-size: 16px; font-weight: 700; letter-spacing: -0.3px; }
+.screen-teacher .top.light { font-weight: 400; }
+.screen-teacher .top.ghost { height: 20px; }
+.screen-teacher h1 {
+  margin-top: 20px;
+  font-size: 48px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -1.44px;
+}
+.screen-teacher h1.h-long { margin-top: 8px; font-size: 44px; line-height: 1.05; }
+.screen-teacher .body { margin-top: 22px; font-size: 16px; line-height: 1.45; letter-spacing: -0.2px; }
+
+/* 하단 버튼 (Quick Check와 같은 모양) */
+.screen-teacher .cta {
+  position: absolute;
+  left: 30px;
+  right: 30px;
+  bottom: 21px;
+  height: 64px;
+  border-radius: 8px;
+  background: #000;
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+}
+.screen-teacher .foot {
+  position: absolute;
+  left: 30px;
+  right: 30px;
+  bottom: 100px;
+  font-size: 13px;
+  color: #8e8e8e;
+}
+.screen-teacher .foot.center { bottom: 44px; text-align: center; font-size: 16px; line-height: 1.35; color: #6e6e6e; }
+
+/* 1. 녹화 동의 */
+.screen-teacher .consent { margin-top: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.screen-teacher .who {
+  height: 152px;
+  padding: 16px 12px;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.screen-teacher .who b { font-size: 22px; font-weight: 700; }
+.screen-teacher .who span { font-size: 16px; }
+.screen-teacher .who.yes { background: #fffd6c; }
+.screen-teacher .who.wait { background: #e5e5e5; color: #3a3a3a; }
+
+/* 2. 알림 배너 */
+.screen-teacher .banner {
+  position: absolute;
+  left: 30px;
+  right: 30px;
+  top: 237px;
+  min-height: 104px;
+  padding: 20px 16px 20px 15px;
+  border-radius: 20px;
+  background: #f1f1f1;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  text-align: left;
+  opacity: 0;
+  transform: translateY(-24px);
+  transition: opacity 0.35s ease, transform 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+.screen-teacher .banner.in { opacity: 1; transform: none; }
+.screen-teacher .banner-icon {
+  flex: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #55df94;
+  box-shadow: 0 0 0 5px #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.screen-teacher .banner-text { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+.screen-teacher .banner-text b { font-size: 17px; font-weight: 700; }
+.screen-teacher .banner-text span { font-size: 13px; line-height: 1.25; }
+.screen-teacher .banner-time { align-self: flex-start; margin-top: 4px; font-size: 13px; font-weight: 600; }
+
+/* 3·4. 녹화 / 강의 만드는 중: 가운데 빛 + 시간 */
+.screen-teacher .glow {
+  position: absolute;
+  left: 50%;
+  top: 237px;
+  width: 322px;
+  height: 316px;
+  margin-left: -161px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+.screen-teacher .glow.green { background: radial-gradient(closest-side, rgba(85, 223, 148, 0.55), rgba(85, 223, 148, 0)); animation: t-breathe 2.4s ease-in-out infinite; }
+.screen-teacher .glow.yellow { background: radial-gradient(closest-side, #fffd6c, rgba(255, 253, 108, 0)); }
+@keyframes t-breathe { 50% { transform: scale(1.05); } }
+.screen-teacher .clock { font-size: 48px; font-weight: 700; letter-spacing: -1px; font-variant-numeric: tabular-nums; }
+.screen-teacher .glow-check { margin-bottom: -6px; }
+.screen-teacher .wave { display: flex; align-items: center; gap: 3px; height: 26px; }
+.screen-teacher .wave i {
+  width: 3px;
+  height: 100%;
+  border-radius: 2px;
+  background: #000;
+  animation: t-wave 0.9s ease-in-out infinite;
+}
+.screen-teacher .wave i:nth-last-child(-n + 3) { background: #ababab; }
+@keyframes t-wave { 0%, 100% { transform: scaleY(0.3); } 50% { transform: scaleY(1); } }
+
+/* 녹화 안내 카드 (탭하면 수업 끝) */
+.screen-teacher .info {
+  position: absolute;
+  left: 24px;
+  right: 24px;
+  bottom: 21px;
+  padding: 18px 17px 22px;
+  border-radius: 20px;
+  background: #f1f1f1;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  text-align: left;
+}
+.screen-teacher .info b { font-size: 24px; font-weight: 700; }
+.screen-teacher .info span { font-size: 16px; line-height: 1.3; }
+
+/* 점 목록 */
+.screen-teacher .dots { list-style: none; margin-top: 30px; display: flex; flex-direction: column; gap: 22px; }
+.screen-teacher [data-step='build'] .dots { position: absolute; left: 30px; right: 30px; top: 578px; margin: 0; }
+.screen-teacher .dots li { position: relative; padding-left: 22px; font-size: 17px; }
+.screen-teacher .dots li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  margin-top: -5px;
+  border-radius: 50%;
+  background: #000;
+}
+.screen-teacher [data-step='build'] .dots li { opacity: 0; transform: translateY(6px); transition: opacity 0.3s ease, transform 0.3s ease; }
+.screen-teacher [data-step='build'] .dots li.in { opacity: 1; transform: none; }
+
+/* 5. AI가 만든 강의 */
+.screen-teacher .sent { margin-top: 26px; display: flex; align-items: center; gap: 8px; font-size: 14px; }
+.screen-teacher .lecture-card {
+  position: relative;
+  width: 100%;
+  height: 150px;
+  margin-top: 20px;
+  padding: 16px 14px;
+  border-radius: 20px;
+  background: #f1f1f1;
+  text-align: left;
+}
+.screen-teacher .lc-title { font-size: 17px; font-weight: 700; line-height: 1.1; }
+.screen-teacher .lc-title em { font-style: normal; color: #7a7a7a; }
+.screen-teacher .lc-play {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 36px;
+  height: 36px;
+  margin: -18px 0 0 -18px;
+  border-radius: 50%;
+  background: #000;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.screen-teacher .lc-meta { position: absolute; left: 14px; bottom: 14px; font-size: 12px; font-weight: 700; color: #7a7a7a; }
+.screen-teacher .chapters { list-style: none; margin-top: 30px; }
+.screen-teacher .chapters li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 5px 0 8px;
+  border-bottom: 1px solid #e5e5e5;
+}
+.screen-teacher .chapters li + li { margin-top: 10px; }
+.screen-teacher .chip-play {
+  flex: none;
+  width: 70px;
+  height: 32px;
+  border-radius: 16px;
+  background: #f1f1f1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+}
+.screen-teacher .ch-text { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.screen-teacher .ch-text b { font-size: 15px; font-weight: 700; }
+.screen-teacher .ch-text span { font-size: 12px; color: #8e8e8e; }
+.screen-teacher .more { font-size: 12px; letter-spacing: 1px; }
+
+/* 6. 도움이 필요할 수 있는 학생 */
+.screen-teacher .alert {
+  padding: 14px 16px;
+  border-radius: 24px;
+  background: #fffd6c;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.screen-teacher .alert b { font-size: 20px; font-weight: 700; }
+.screen-teacher .alert span { font-size: 13px; }
+.screen-teacher .who-label { margin-top: 30px; font-size: 14px; font-weight: 600; color: #6e6e6e; }
+
+/* 7. 누가 봤나 */
+.screen-teacher [data-step='watched'] h1 { margin-top: 8px; font-size: 44px; }
+.screen-teacher .tally { margin-top: 28px; display: flex; align-items: baseline; gap: 10px; }
+.screen-teacher .tally b { font-size: 26px; font-weight: 700; }
+.screen-teacher .tally span { font-size: 16px; }
+.screen-teacher .students { list-style: none; margin-top: 12px; }
+.screen-teacher .students li:not(.question) {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 0;
+  border-bottom: 1px solid #e5e5e5;
+}
+.screen-teacher .avatar {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #f1f1f1;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 36px;
+  text-align: center;
+}
+.screen-teacher .avatar i {
+  position: absolute;
+  right: -2px;
+  top: -2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #55df94;
+  box-shadow: 0 0 0 2px #fff;
+}
+.screen-teacher .students b { flex: 1; font-size: 17px; font-weight: 700; }
+.screen-teacher .state { display: flex; align-items: center; gap: 8px; font-size: 16px; color: #6e6e6e; }
+.screen-teacher .state svg { width: 22px; height: 22px; }
+.screen-teacher .students li.has-q { border-bottom: none; }
+.screen-teacher .question {
+  margin: 4px 0 8px;
+  padding: 16px;
+  border-radius: 20px;
+  background: #f1f1f1;
+}
+.screen-teacher .q-meta { font-size: 13px; color: #6e6e6e; }
+.screen-teacher .q-text { margin-top: 6px; font-size: 22px; font-weight: 700; line-height: 1.25; }
+.screen-teacher .q-answer { display: none; margin-top: 10px; font-size: 15px; line-height: 1.4; color: #3a3a3a; }
+.screen-teacher .question.open .q-answer { display: block; }
+.screen-teacher .q-btns { margin-top: 14px; display: flex; gap: 10px; }
+.screen-teacher .pill { height: 46px; padding: 0 22px; border-radius: 23px; font-size: 16px; font-weight: 700; }
+.screen-teacher .pill.dark { background: #000; color: #fff; }
+.screen-teacher .pill.light { background: #fff; border: 1.5px solid #000; }
+
+/* 안내 토스트 */
+.screen-teacher .toast {
+  position: absolute;
+  left: 50%;
+  bottom: 110px;
+  transform: translate(-50%, 10px);
+  padding: 10px 18px;
+  border-radius: 20px;
+  background: #000;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.screen-teacher .toast.show { opacity: 1; transform: translate(-50%, 0); }
