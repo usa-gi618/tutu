@@ -66,6 +66,7 @@ export function prepare(data, interactions = []) {
   for (const it of interactions) {
     if (it.freeze) freezeFrom(findLayer(data, it.scene, it.freeze.layer).layer, it.freeze.from);
     for (const s of it.split ?? []) splitLayer(data, it.scene, s.layer, s.groups, s.as);
+    for (const name of it.hide ?? []) findLayer(data, it.scene, name).layer.hd = true; // 숨길 레이어
   }
   for (const l of data.layers) l.cl = layerClass(l.nm);
   for (const a of data.assets ?? []) for (const l of a.layers ?? []) l.cl = layerClass(l.nm);
@@ -258,32 +259,60 @@ export function create(it, svg, toSvg, done) {
     };
   }
 
-  // 스위치: 탭하면 켜고 끈다. 모두 goal 상태가 되면 완료.
-  // 영상에 그려진 원래 상태(original)와 다르게 보여줄 때만 색과 손잡이 위치를 바꾼다.
+  // 스위치: 탭하면 켜고 끈다. 켜진 스위치는 초록, 꺼진 스위치는 회색.
+  // 상자 안에 꺼진 것마다 "no ~" 표시. 모두 goal 상태가 되면 완료 → tree가 점점 자란다.
   if (it.type === 'toggles') {
     const rows = it.toggles.map((name, i) => ({
       row: find(name),
       track: find(`${name}-track`),
       knob: wrap(find(`${name}-knob`)),
-      original: it.original[i],
+      original: it.original[i], // 영상에 원래 그려진 상태 (손잡이 위치 기준)
       on: it.start[i],
     }));
+
+    // "no light / no water / no CO₂" 표시
+    const box = find(it.box);
+    const chips = svgEl('g', { class: 'tutu-chips', style: 'transition: opacity .2s' });
+    rows.forEach((r, i) => {
+      const g = svgEl('g', { transform: `translate(${it.chips.x + i * 60} ${it.chips.y})`, style: 'transition: opacity .25s' });
+      g.append(svgEl('rect', { width: 56, height: 22, rx: 11, fill: 'rgb(220,220,220)' }));
+      const t = svgEl('text', { x: 28, y: 14.5, 'text-anchor': 'middle', fill: 'rgb(110,110,110)', 'font-size': 10, 'font-weight': 500, 'font-family': '-apple-system, BlinkMacSystemFont, sans-serif' });
+      t.textContent = `no ${it.labels[i]}`;
+      g.append(t);
+      chips.append(g);
+      r.chip = g;
+    });
+    box.append(chips);
+
     const draw = (r) => {
-      if (r.on === r.original) {
-        restore(r.track);
-        restore(r.row);
-        r.knob.removeAttribute('transform');
-        return;
-      }
-      // 켜짐: 검정 막대 + 손잡이 오른쪽 + 검정 글자 / 꺼짐: 회색 막대 + 손잡이 왼쪽 + 회색 글자
-      recolor(r.track, { fill: r.on ? [[C.grey220, C.black]] : [[C.black, C.grey220]] });
-      recolor(r.row, { fill: r.on ? [[C.grey110, C.black]] : [[C.black, C.grey110]] });
-      r.knob.setAttribute('transform', `translate(${r.on ? it.travel : -it.travel} 0)`);
+      recolor(r.track, { fill: [[C.black, r.on ? C.green : C.grey220], [C.grey220, r.on ? C.green : C.grey220]] });
+      recolor(r.row, { fill: [[C.black, r.on ? C.black : C.grey110], [C.grey110, r.on ? C.black : C.grey110]] });
+      const shift = r.on === r.original ? 0 : (r.on ? it.travel : -it.travel);
+      r.knob.setAttribute('transform', `translate(${shift} 0)`);
+      r.chip.style.opacity = r.on ? 0 : 1;
     };
     rows.forEach(draw);
+
+    // 나무가 점점 자라기: 완료 후 영상이 재생되는 만큼(growFrames 동안) 바닥을 기준으로 커진다
+    // 영상 위치에 맞추므로 멈추면 멈추고, 되감으면 다시 작아진다
+    const tree = wrap(find(it.tree));
+    let base = null; // { cx, by } 나무 바닥 가운데
+    const setGrowth = (f) => {
+      const p = Math.max(0, Math.min(1, (f - it.at) / it.growFrames));
+      if (p === 0) return tree.removeAttribute('transform');
+      base ??= (() => { const b = tree.getBBox(); return { cx: b.x + b.width / 2, by: b.y + b.height }; })();
+      const sc = 1 + (it.growTo - 1) * p * p * (3 - 2 * p);
+      tree.setAttribute('transform', `translate(${base.cx} ${base.by}) scale(${sc}) translate(${-base.cx} ${-base.by})`);
+    };
+
     let finished = false;
     return {
       at: it.at,
+      // 상자가 나타나기 전에는 표시를 숨긴다
+      onFrame(f) {
+        chips.style.opacity = f >= it.at - 15 ? 1 : 0;
+        setGrowth(finished ? f : it.at);
+      },
       tap(e) {
         if (finished) return true;
         const r = rows.find((x) => [x.row, x.track, x.knob.parentNode].some((n) => n.contains(e.target)));
@@ -298,6 +327,7 @@ export function create(it, svg, toSvg, done) {
       },
       reset() {
         finished = false;
+        tree.removeAttribute('transform');
         rows.forEach((r, i) => { r.on = it.start[i]; draw(r); });
       },
     };

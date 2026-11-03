@@ -128,6 +128,7 @@ export default {
     }
     function finish(g) {
       g.done = true;
+      if (awaiting !== g) return; // 멈추기 전에 미리 끝낸 경우 (early)
       awaiting = null;
       play();
     }
@@ -246,7 +247,10 @@ export default {
         fill.style.width = `${p * 100}%`;
       });
       head.style.left = `${barX(frame)}px`;
-      gates.forEach((g) => { g.dot.style.left = `${barX(g.at)}px`; });
+      gates.forEach((g) => {
+        g.dot.style.left = `${barX(g.at)}px`;
+        g.onFrame?.(frame);
+      });
       if (toggleBtn.dataset.playing !== String(playing)) {
         toggleBtn.dataset.playing = playing;
         toggleBtn.innerHTML = playing ? ICON_PAUSE : ICON_PLAY;
@@ -289,9 +293,10 @@ export default {
       }
       if (e.target.closest('button')) return; // 버튼은 click으로 처리
 
-      // 끌어다 놓기 인터랙션
-      if (awaiting?.down?.(e)) {
-        gesture = { type: 'gate', id: e.pointerId };
+      // 끌어다 놓기·슬라이더 인터랙션 (멈춰 있을 때, 또는 early 구간에서는 재생 중에도)
+      const live = awaiting ?? gates.find((g) => !g.done && g.early !== undefined && frame >= g.early && frame <= g.at);
+      if (live?.down?.(e)) {
+        gesture = { type: 'gate', id: e.pointerId, gate: live };
         return;
       }
       gesture = { type: 'touch', id: e.pointerId, start: toLand(e), moved: false, target: e.target };
@@ -306,7 +311,7 @@ export default {
     land.addEventListener('pointermove', (e) => {
       if (!gesture || e.pointerId !== gesture.id) return;
       if (gesture.type === 'seek') return seekTo(e);
-      if (gesture.type === 'gate') return awaiting?.move(e);
+      if (gesture.type === 'gate') return gesture.gate.move(e);
       const p = toLand(e);
       if (!gesture.held && Math.hypot(p.x - gesture.start.x, p.y - gesture.start.y) > MOVE_SLOP) {
         gesture.moved = true;
@@ -324,7 +329,7 @@ export default {
         return;
       }
       if (g.type === 'gate') {
-        awaiting?.up(e);
+        g.gate.up(e);
         return keepControls();
       }
       clearTimeout(g.timer);
@@ -384,6 +389,7 @@ export default {
         gates = (lecture.interactions ?? [])
           .map((it) => {
             const g = createInteraction(it, svg, toSvg, () => finish(g));
+            g.early = it.early; // 이 프레임부터는 재생 중에도 조작 가능
             // 재생바 위 검은 점: 학생이 고르거나 조작해야 하는 지점
             g.dot = document.createElement('i');
             g.dot.className = 'gate-dot';

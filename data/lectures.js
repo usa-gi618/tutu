@@ -9,7 +9,9 @@
 //   tap   : target(마이크 등)을 탭하면 이어서 재생
 //   drag  : item을 target 위로 끌어다 놓기
 //   slider: knob을 끝(to)까지 끌기 → activate.on 나무 활성
-//   toggles: 스위치 탭으로 켜고 끄기 → 모두 goal 상태가 되면 완료
+//   toggles: 스위치 탭으로 켜고 끄기 → 모두 goal 상태가 되면 완료 + 나무 자람
+//   early = 이 프레임부터는 재생 중에도 조작 가능 (at 전에 끝내면 멈추지 않고 지나감)
+//   hide = 숨길 레이어
 //   split = 한 레이어 안 도형 묶음을 따로 떼어 쓸 레이어로 만들기, freeze = 영상에 미리 들어 있는 강조 지우기
 const checkOptions = (layer = 'check-card') => ['option-1', 'option-2', 'option-3'].map((o) => ({ layer, groups: [o], as: o }));
 
@@ -29,17 +31,25 @@ export const TODAY = [
       { type: 'drag', scene: '02_step1_weigh', at: 352, split: [{ layer: 'drop-zone', groups: [1, 2, 3], as: 'drag-item' }], item: 'drag-item', target: 'scale' },
       // 03 5년 흐르게 하기: 슬라이더 손잡이를 끝(5 yrs)까지 끌면 5년 나무가 자란다
       {
-        type: 'slider', scene: '03_step2_grow', at: 605,
+        type: 'slider', scene: '03_step2_grow', early: 556, at: 580, // 556부터 재생 중에도 조작 가능, 580(Now let five years pass)에서 멈춤
         split: [{ layer: 'time-slider', groups: [2], as: 'slider-knob' }, { layer: 'time-slider', groups: [3], as: 'slider-fill' }],
         knob: 'slider-knob', fill: 'slider-fill', track: 'time-slider', from: 263, start: 463, to: 663,
         activate: { on: 'year-5', off: 'year-3' },
       },
-      // 05 이산화탄소 끄기: 빛·물·CO₂ 스위치 (처음엔 모두 켜짐). CO₂만 끄면 실험이 이어진다
+      // 05 조건 켜기: 빛·물·CO₂가 모두 꺼진 채 시작. 켤 때마다 초록 + "no ~" 표시 사라짐. 다 켜면 재생되며 나무가 자란다
+      // 원래 영상은 'CO₂를 끄면 안 자란다'는 내용이라 반대되는 no-CO₂ 그래프 선·결론·자막은 숨긴다
       {
         type: 'toggles', scene: '05_step4_no_co2', at: 1045,
-        split: ['toggle-0', 'toggle-1', 'toggle-2'].flatMap((t) => [{ layer: t, groups: [0], as: `${t}-knob` }, { layer: t, groups: [1], as: `${t}-track` }]),
-        toggles: ['toggle-0', 'toggle-1', 'toggle-2'], // Light, Water, CO₂
-        original: [true, true, false], start: [true, true, true], goal: [true, true, false], travel: 20,
+        split: [
+          ...['toggle-0', 'toggle-1', 'toggle-2'].flatMap((t) => [{ layer: t, groups: [0], as: `${t}-knob` }, { layer: t, groups: [1], as: `${t}-track` }]),
+          { layer: 'sealed-box', groups: [0], as: 'no-co2-tag' },
+          { layer: 'sealed-box', groups: [2, 3], as: 'box-tree' },
+          { layer: 'graph', groups: [0, 1], as: 'graph-no-co2' },
+        ],
+        hide: ['no-co2-tag', 'graph-no-co2', 'conclusion', 'caption 2'],
+        toggles: ['toggle-0', 'toggle-1', 'toggle-2'], labels: ['light', 'water', 'CO₂'],
+        original: [true, true, false], start: [false, false, false], goal: [true, true, true], travel: 20,
+        box: 'sealed-box', chips: { x: 276, y: 152 }, tree: 'box-tree', growTo: 1.9, growFrames: 90, // 3초 동안 1.9배까지
       },
       // 07 확인 문제
       { type: 'answer', scene: '07_check', at: 1616, split: checkOptions(), options: ['option-1', 'option-2', 'option-3'], answer: 'option-2' },
