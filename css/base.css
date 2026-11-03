@@ -23,17 +23,20 @@ img { -webkit-user-drag: none; }
 
 /*
   iPhone 14 Plus: 428 x 926pt. Figma 좌표를 그대로 쓰는 무대.
-  실제 상태바(높이 47pt)가 Figma 상태바 자리에 오도록 무대를 맞춘다.
-  - 상태바가 콘텐츠를 덮는 경우: safe-area-inset-top = 47 → 0 이동
-  - 상태바 아래에서 콘텐츠가 시작하는 경우: inset = 0 → -47 이동
+  위 47pt(Figma 상태바 자리)는 실제 상태바 뒤로 숨기고, 나머지 428 x 879를 화면에 맞춘다.
+  위치·배율은 js/app.js의 fitStage()가 정한다.
+  - 홈 화면 앱: 보이는 영역이 딱 428 x 879 → 원래 크기 그대로
+  - Safari 브라우저: 주소창 때문에 영역이 작으면 그만큼 줄여서 전부 보이게
 */
 .stage {
   position: fixed;
   left: 50%;
-  top: calc(env(safe-area-inset-top, 0px) - 47px);
+  top: 0;
   width: 428px;
   height: 926px;
   margin-left: -214px;
+  transform-origin: 50% 0;
+  transform: translateY(-47px);
   overflow: hidden;
   background: #fff;
 }

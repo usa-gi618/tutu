@@ -89,7 +89,8 @@ export default {
     // 화면 좌표 → 가로 화면 좌표
     function toLand(e) {
       const r = el.getBoundingClientRect();
-      return { x: LAND_W - (e.clientY - r.top), y: e.clientX - r.left };
+      const scale = r.width / el.offsetWidth; // 무대가 화면에 맞춰 줄어든 비율
+      return { x: LAND_W - (e.clientY - r.top) / scale, y: (e.clientX - r.left) / scale };
     }
 
     function segmentAt(f) {
