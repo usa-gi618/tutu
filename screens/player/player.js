@@ -9,11 +9,13 @@
 //   말풍선 캐릭터(오른쪽 아래, 영상 내내 보임): 누르면 영상이 멈추고 배경이 흐려지며 마이크가 뜬다.
 //     학생이 말하는 문장이 초록 자막으로 나오고(음성 인식 흉내), 끝나면 캐릭터가 큰 말풍선으로 커지며 AI 답변 (Figma 11734:2041)
 //     답변 화면을 탭하면 다시 작아지고 영상이 이어진다. 질문·답변은 강의 데이터의 ask (지금은 생물만)
+//   EN / ES: 스페인어면 영상 속 영어 자막을 숨기고 스페인어 자막을 띄우며, 코드로 그리는 글자를 모두 바꾼다 (data/spanish.js)
 /* global lottie */
 import { TODAY } from '../../data/lectures.js';
 import { state } from '../../js/state.js';
 import { loadLesson } from '../../js/lessons.js';
 import { create as createInteraction } from '../../js/interactions.js';
+import { UI, ES } from '../../data/spanish.js';
 
 const SWIPE_PX = 40;
 const HOLD_MS = 400;  // 길게 누르기로 보는 시간
@@ -31,43 +33,45 @@ const ICON_PLAY = `
   </svg>`;
 
 // 영상 마지막 Recap 화면. My prediction 카드는 학생이 고른 카드로 재생 중에 채운다.
-function recapHtml(recap) {
-  if (!recap) return '';
+function recapInner(recap, ui) {
   return `
-    <div class="recap">
-      <div class="recap-chip">Recap</div>
-      <div class="recap-cards">
-        ${recap.prediction ? `
-          <div class="recap-card">
-            <p class="recap-label">My prediction</p>
-            <p class="recap-main prediction"></p>
-            <p class="recap-note"></p>
-          </div>` : ''}
-        ${recap.cards.map((c) => `
-          <div class="recap-card">
-            <p class="recap-label">${c.label}</p>
-            <p class="recap-main">${c.html}</p>
-          </div>`).join('')}
-      </div>
-      <p class="recap-caption">${recap.caption}</p>
-    </div>`;
+    <div class="recap-chip">${ui.recapChip}</div>
+    <div class="recap-cards">
+      ${recap.prediction ? `
+        <div class="recap-card">
+          <p class="recap-label">${recap.prediction.label ?? 'My prediction'}</p>
+          <p class="recap-main prediction"></p>
+          <p class="recap-note"></p>
+        </div>` : ''}
+      ${recap.cards.map((c) => `
+        <div class="recap-card">
+          <p class="recap-label">${c.label}</p>
+          <p class="recap-main">${c.html}</p>
+        </div>`).join('')}
+    </div>
+    <p class="recap-caption">${recap.caption}</p>`;
+}
+function recapHtml(recap) {
+  return recap ? `<div class="recap">${recapInner(recap, UI.en)}</div>` : '';
 }
 
 // 말풍선 캐릭터 = 작은 말풍선 버튼. 질문하면 이 요소가 그대로 커져서 AI 답변 말풍선이 된다.
 function askHtml(ask) {
   return `
     <button class="ask-bubble" type="button" aria-label="Ask a question">
-      ${ask ? `
-        <div class="ask-answer">
-          <p class="ask-question">“${ask.question}”</p>
-          <div class="ask-steps">
-            ${ask.steps.map((s, i) => `${i ? '<span class="ask-arrow">→</span>' : ''}<div class="ask-step"><b>${s.top}</b><span>${s.bottom}</span></div>`).join('')}
-            <span class="ask-result">${ask.result}</span>
-          </div>
-          <p class="ask-reply"></p>
-        </div>` : ''}
+      ${ask ? `<div class="ask-answer">${askInner(ask)}</div>` : ''}
       <img class="ask-face" src="assets/player-mascot.svg" alt="" />
     </button>`;
+}
+
+function askInner(ask) {
+  return `
+    <p class="ask-question">“${ask.question}”</p>
+    <div class="ask-steps">
+      ${ask.steps.map((s, i) => `${i ? '<span class="ask-arrow">→</span>' : ''}<div class="ask-step"><b>${s.top}</b><span>${s.bottom}</span></div>`).join('')}
+      <span class="ask-result">${ask.result}</span>
+    </div>
+    <p class="ask-reply"></p>`;
 }
 
 const clock = (sec) => `${Math.floor(sec / 60)}:${String(Math.floor(sec % 60)).padStart(2, '0')}`;
@@ -78,6 +82,7 @@ export default {
     return `
       <div class="land">
         <div class="video"></div>
+        <p class="sub"></p>
         ${recapHtml(l.recap)}
         <div class="speed"></div>
 
@@ -154,8 +159,47 @@ export default {
     let askClosedAt = 0;
     const bubble = el.querySelector('.ask-bubble');
     const transcript = el.querySelector('.ask-transcript');
-    const reply = el.querySelector('.ask-reply');
+    let reply = el.querySelector('.ask-reply');
     const finishEl = el.querySelector('.finish');
+
+    // ---- 언어 (EN / ES) ----
+    const es = ES[lecture.subject];
+    const isEs = () => state.lang === 'es' && !!es;
+    const ui = () => UI[isEs() ? 'es' : 'en'];
+    const recapData = () => (isEs() && es.recap && lecture.recap
+      ? { ...lecture.recap, ...es.recap, prediction: { ...lecture.recap.prediction, ...es.recap.prediction } }
+      : lecture.recap);
+    const askData = () => (isEs() && es.ask ? { ...lecture.ask, ...es.ask } : lecture.ask);
+    const sub = el.querySelector('.sub');
+    function applyLang() {
+      const t = ui();
+      el.querySelector('.lang-thumb').classList.toggle('es', state.lang === 'es');
+      land.classList.toggle('lang-es', isEs()); // 영상 속 영어 자막 숨김 (CSS)
+      el.querySelector('.controls .title').textContent = isEs() ? es.title : lecture.title;
+      el.querySelector('.controls .subject').textContent = isEs() ? es.subject : lecture.subject;
+      el.querySelector('.finish-title').textContent = t.finishTitle;
+      el.querySelector('.finish-sub').textContent = t.finishSub;
+      el.querySelector('.rewatch').textContent = t.rewatch;
+      el.querySelector('.start-questions').textContent = t.startQuestions;
+      if (recapEl) {
+        recapEl.innerHTML = recapInner(recapData(), t);
+        fillRecap();
+      }
+      if (lecture.ask && ask === 'idle') {
+        el.querySelector('.ask-answer').innerHTML = askInner(askData());
+        reply = el.querySelector('.ask-reply');
+      }
+    }
+    // 스페인어 자막: 지금 조각(마커)의 번역. Recap·종료 화면에서는 없음
+    function updateSub() {
+      let text = null;
+      if (isEs() && frame < videoEnd) {
+        const s = [...segments].reverse().find((x) => frame >= x.start);
+        text = s && es.captions?.[s.id];
+      }
+      if (text) sub.textContent = text;
+      sub.classList.toggle('show', !!text);
+    }
     let frame = 0;
     let playing = false;
     let baseFrame = 0;         // 재생 시작 기준
@@ -269,12 +313,12 @@ export default {
       finishEl.classList.add('show');
     }
     function fillRecap() {
-      const p = lecture.recap?.prediction;
+      const p = recapData()?.prediction;
       if (!p) return;
       const choice = gates.find((g) => g.scene === p.scene)?.choice;
       const main = recapEl.querySelector('.prediction');
       const note = recapEl.querySelector('.recap-note');
-      main.textContent = p.texts[choice] ?? 'No prediction';
+      main.textContent = p.texts[choice] ?? ui().noPrediction;
       main.classList.toggle('ruled-out', !!choice && choice !== p.correct);
       note.textContent = !choice ? '' : choice === p.correct ? p.confirmed : p.ruledOut;
     }
@@ -333,6 +377,7 @@ export default {
         recapEl.classList.toggle('show', inRecap);
       }
       if (frame < END) finishEl.classList.remove('show');
+      updateSub();
       timeText.textContent = `${clock(frame / lesson.fr)} / ${clock(END / lesson.fr)}`;
       scenes.forEach((s, i) => {
         const fill = bar.children[i].firstElementChild;
@@ -470,8 +515,9 @@ export default {
       // TODO: 문제풀이 화면
     });
     el.querySelectorAll('.lang-btn').forEach((b) => b.addEventListener('click', () => {
-      // TODO: 스페인어 음성/자막이 생기면 전환
-      el.querySelector('.lang-thumb').classList.toggle('es', b.dataset.lang === 'es');
+      state.lang = b.dataset.lang;
+      applyLang();
+      render();
     }));
     // ---- 질문하기 ----
     const later = (fn, ms) => askTimers.push(setTimeout(fn, ms));
@@ -484,7 +530,7 @@ export default {
       controls.classList.remove('show');
       land.classList.add('asking', 'listening');
       // 음성 인식 흉내: 질문 문장이 단어 단위로 나타난다
-      const words = lecture.ask.question.split(' ');
+      const words = askData().question.split(' ');
       transcript.textContent = '';
       words.forEach((w, i) => later(() => {
         transcript.textContent = words.slice(0, i + 1).join(' ');
@@ -496,12 +542,12 @@ export default {
       if (ask !== 'listening') return;
       askTimers.forEach(clearTimeout);
       askTimers = [];
-      transcript.textContent = lecture.ask.question;
+      transcript.textContent = askData().question;
       ask = 'answering';
       land.classList.remove('listening');
       land.classList.add('answering');
       // 답변은 단어 단위로 출력
-      const words = lecture.ask.answer.split(' ');
+      const words = askData().answer.split(' ');
       reply.textContent = '';
       words.forEach((w, i) => later(() => { reply.textContent = words.slice(0, i + 1).join(' '); }, 900 + i * 90));
     }
@@ -545,7 +591,7 @@ export default {
         const svg = el.querySelector('.video svg');
         gates = (lecture.interactions ?? [])
           .map((it) => {
-            const g = createInteraction(it, svg, toSvg, () => finish(g));
+            const g = createInteraction(it, svg, toSvg, () => finish(g), () => state.lang);
             g.early = it.early; // 이 프레임부터는 재생 중에도 조작 가능
             g.scene = it.scene;
             // 재생바 위 검은 점: 학생이 고르거나 조작해야 하는 지점
@@ -555,6 +601,7 @@ export default {
             return g;
           })
           .sort((a, b) => a.at - b.at);
+        applyLang();
         raf = requestAnimationFrame(tick);
         play(0);
       };

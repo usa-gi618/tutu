@@ -171,8 +171,10 @@ const TREE_OFF = { fill: [[C.black, C.grey171], [C.white, C.grey241], [C.green, 
   svg  : Lottie가 그린 svg
   toSvg: 포인터 이벤트 → svg 좌표
   done : 조작이 끝나면 호출 → 영상 이어서 재생
+  lang : 지금 언어 ('en' | 'es')를 돌려주는 함수. 표시 문구가 { en, es }이면 그 언어로
 */
-export function create(it, svg, toSvg, done) {
+export function create(it, svg, toSvg, done, lang = () => 'en') {
+  const say = (v) => (v && typeof v === 'object' && !Array.isArray(v) ? v[lang()] ?? v.en : v);
   const find = (name) => svg.querySelector(`.${layerClass(it.scene)} .${layerClass(name)}`);
   const clearMarks = () => svg.querySelectorAll(`.${layerClass(it.scene)} .tutu-mark`).forEach((m) => m.remove());
 
@@ -188,7 +190,7 @@ export function create(it, svg, toSvg, done) {
         clearMarks();
         const card = find(name);
         const { box } = tint(card, YELLOW, 12);
-        badge(card, box, it.badge, it.badgeAt);
+        badge(card, box, say(it.badge), it.badgeAt);
         done();
         return true;
       },
@@ -292,7 +294,6 @@ export function create(it, svg, toSvg, done) {
     rows.forEach((r, i) => {
       const g = svgEl('g', { transform: `translate(${it.chips.x} ${it.chips.y})` });
       const t = svgEl('text', { x: 0, y: 0, fill: '#000', 'font-size': 11, 'font-weight': 600, 'font-family': '-apple-system, BlinkMacSystemFont, sans-serif' });
-      t.textContent = `no ${it.labels[i]}`;
       const strike = svgEl('line', { y1: -3.5, y2: -3.5, x1: -1, stroke: 'rgb(171,171,171)', 'stroke-width': 1.5, style: 'display:none' });
       g.append(t, strike);
       chips.append(g);
@@ -355,6 +356,14 @@ export function create(it, svg, toSvg, done) {
       onFrame(f) {
         // Lottie는 장면이 화면에 나올 때 원래 색을 칠한다 → 그 뒤에 매번 지금 상태로 다시 칠한다
         rows.forEach(draw);
+        // 언어가 바뀌면 문구를 다시 쓰고 다시 늘어놓는다
+        rows.forEach((r, i) => {
+          const text = say(it.labels)[i];
+          if (r.chip.t.textContent !== text) {
+            r.chip.t.textContent = text;
+            laidOut = false;
+          }
+        });
         chips.style.display = f >= it.at - 15 ? '' : 'none';
         if (!laidOut && f >= it.at - 15) layoutChips();
         setGrowth(finished ? f : it.at);

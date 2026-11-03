@@ -27,7 +27,7 @@ export const TODAY = [
     interactions: [
       // 01 예측: Soil / Water / Air 중 하나 고르기 (원래 영상은 Soil을 자동으로 강조 → 지움)
       {
-        type: 'pick', scene: '01_predict', at: 197, options: ['choice-soil', 'choice-water', 'choice-air'], badge: 'My prediction',
+        type: 'pick', scene: '01_predict', at: 197, options: ['choice-soil', 'choice-water', 'choice-air'], badge: { en: 'My prediction', es: 'Mi predicción' },
         freeze: { layer: 'choice-soil', from: 200 },
         // 고르기 전에는 세 카드 모두 회색: 영상 속 Soil은 아이콘이 검정 + 검은 테두리라 Water·Air와 맞춘다
         restyle: [
@@ -55,7 +55,7 @@ export const TODAY = [
           { layer: 'graph', groups: [0, 1], as: 'graph-no-co2' },
         ],
         hide: ['no-co2-tag', 'graph-no-co2', 'conclusion', 'caption 2'],
-        toggles: ['toggle-0', 'toggle-1', 'toggle-2'], labels: ['light', 'water', 'CO₂'],
+        toggles: ['toggle-0', 'toggle-1', 'toggle-2'], labels: { en: ['no light', 'no water', 'no CO₂'], es: ['sin luz', 'sin agua', 'sin CO₂'] },
         original: [true, true, false], start: [false, false, false], goal: [true, true, true], travel: 20,
         box: 'sealed-box', chips: { x: 280, y: 168 }, tree: 'box-tree', growFrames: 90, // 3초 동안 자란다
         grow: { x: 362, ground: 292, stem: [26, 60], r: [13, 32] }, // 줄기 길이·잎 반지름 (영상 속 원래 나무 26 / 13)
@@ -158,7 +158,7 @@ export const TODAY = [
       // 06 토론: 마이크를 눌러 내 생각 말하기 (누르면 Listening → 내 대답 말풍선)
       { type: 'tap', scene: '06_debate', at: 1539, target: 'answer' },
       // 07 정리: 내 편 고르기
-      { type: 'pick', scene: '07_recap', at: 2005, options: ['blessing', 'root'], badge: 'My side', badgeAt: 'top-right' },
+      { type: 'pick', scene: '07_recap', at: 2005, options: ['blessing', 'root'], badge: { en: 'My side', es: 'Mi postura' }, badgeAt: 'top-right' },
     ],
     description: 'In today’s class, we learned how machines and factories changed Britain, and debated whether the Industrial Revolution was a blessing or a root cause of inequality and pollution.',
     quiz: {

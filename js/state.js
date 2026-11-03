@@ -10,4 +10,6 @@ export const state = {
   playerBack: 'lecture',
   // 라이브러리에서 보고 있던 과목
   librarySubject: null,
+  // 영상 화면 언어 ('en' | 'es')
+  lang: 'en',
 };

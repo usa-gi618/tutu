@@ -18,6 +18,31 @@
 .screen-player .video { position: absolute; inset: 0; }
 .screen-player .video svg { display: block; }
 
+/* 스페인어: 영상 속 영어 자막(caption 레이어)을 숨기고 그 자리에 스페인어 자막 */
+.screen-player .lang-es .video g[class*="L-caption-"] { opacity: 0 !important; }
+.screen-player .sub {
+  position: absolute;
+  left: 50%;
+  bottom: 30px;
+  max-width: calc(100% - 300px);
+  transform: translateX(-50%);
+  padding: 6px 14px;
+  border-radius: 14px;
+  background: #000;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+  text-align: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+.screen-player .sub.show { opacity: 1; }
+/* 제어 화면이 보일 때는 재생바 위로 비켜 준다 (유튜브처럼) */
+.screen-player .sub { transition: opacity 0.2s ease, bottom 0.25s ease; }
+.screen-player .land:has(.controls.show) .sub { bottom: 84px; }
+
 /* 길게 누르는 동안 위쪽 가운데에 배속 표시 (유튜브처럼) */
 .screen-player .speed {
   position: absolute;

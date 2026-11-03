@@ -20,6 +20,7 @@ function parse(data) {
   const segments = markers.map((m, i) => {
     const [id, ...rest] = m.cm.split(' · ');
     return {
+      id, // 마커 번호 (예: 01_2) → 스페인어 자막 찾기
       scene: id.split('_')[0],
       caption: rest.join(' · '),
       start: i === 0 ? data.ip : m.tm,
