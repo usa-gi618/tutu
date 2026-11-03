@@ -164,11 +164,13 @@ export function create(it, svg, toSvg, done) {
 
   // 카드 고르기: 고른 카드에 노란색 + 표시 (예: My prediction)
   if (it.type === 'pick') {
-    return {
+    const api = {
       at: it.at,
+      choice: null, // 고른 카드 레이어 이름 (Recap에서 사용)
       tap(e) {
         const name = it.options.find((n) => find(n)?.contains(e.target));
         if (!name) return false;
+        api.choice = name;
         clearMarks();
         const card = find(name);
         const { box } = tint(card, YELLOW, 12);
@@ -176,8 +178,12 @@ export function create(it, svg, toSvg, done) {
         done();
         return true;
       },
-      reset: clearMarks,
+      reset() {
+        api.choice = null;
+        clearMarks();
+      },
     };
+    return api;
   }
 
   // 확인 문제: 고른 보기가 정답이면 초록, 틀리면 회색 + 정답을 초록으로
@@ -210,27 +216,24 @@ export function create(it, svg, toSvg, done) {
     };
   }
 
-  // 슬라이더: knob을 끝(to)까지 끌면 완료. fill 막대가 knob을 따라 늘어난다. 끝에 닿으면 activate.on 나무를 살리고 off는 회색으로
+  // 슬라이더: knob이 머무는 구간의 나무가 컬러, 나머지는 회색. 끝(to)까지 끌면 완료. fill 막대가 knob을 따라 늘어난다.
   if (it.type === 'slider') {
     const knob = wrap(find(it.knob));
     const fill = wrap(find(it.fill));
     const track = find(it.track);
+    const trees = it.trees.map((t) => ({ ...t, el: find(t.layer) }));
     let x = it.start;
     let drag = null;
+    const colorNearest = () => {
+      const near = trees.reduce((a, b) => (Math.abs(b.x - x) < Math.abs(a.x - x) ? b : a));
+      trees.forEach((t) => recolor(t.el, t === near ? TREE_ON : TREE_OFF));
+    };
     const setX = (v) => {
       x = Math.max(it.from, Math.min(it.to, v));
       knob.setAttribute('transform', `translate(${x - it.start} 0)`);
       const sx = (x - it.from) / (it.start - it.from); // 원래 채워진 길이 대비
       fill.setAttribute('transform', `translate(${it.from} 0) scale(${sx} 1) translate(${-it.from} 0)`);
-    };
-    const setYears = (atEnd) => {
-      if (atEnd) {
-        recolor(find(it.activate.on), TREE_ON);
-        recolor(find(it.activate.off), TREE_OFF);
-      } else {
-        restore(find(it.activate.on));
-        restore(find(it.activate.off));
-      }
+      colorNearest();
     };
     return {
       at: it.at,
@@ -248,13 +251,12 @@ export function create(it, svg, toSvg, done) {
         drag = null;
         if (x < it.to - 25) return; // 끝까지 가야 완료
         setX(it.to);
-        setYears(true);
         setTimeout(done, 350);
       },
       reset() {
         drag = null;
         setX(it.start);
-        setYears(false);
+        trees.forEach((t) => restore(t.el));
       },
     };
   }

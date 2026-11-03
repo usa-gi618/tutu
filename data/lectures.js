@@ -8,7 +8,7 @@
 //   answer: 확인 문제. options 중 하나 탭 → 정답(answer)은 초록, 틀린 선택은 회색
 //   tap   : target(마이크 등)을 탭하면 이어서 재생
 //   drag  : item을 target 위로 끌어다 놓기
-//   slider: knob을 끝(to)까지 끌기 → activate.on 나무 활성
+//   slider: knob을 끝(to)까지 끌기. knob과 가장 가까운 trees의 나무가 컬러
 //   toggles: 스위치 탭으로 켜고 끄기 → 모두 goal 상태가 되면 완료 + 나무 자람
 //   early = 이 프레임부터는 재생 중에도 조작 가능 (at 전에 끝내면 멈추지 않고 지나감)
 //   hide = 숨길 레이어
@@ -34,7 +34,7 @@ export const TODAY = [
         type: 'slider', scene: '03_step2_grow', early: 556, at: 580, // 556부터 재생 중에도 조작 가능, 580(Now let five years pass)에서 멈춤
         split: [{ layer: 'time-slider', groups: [2], as: 'slider-knob' }, { layer: 'time-slider', groups: [3], as: 'slider-fill' }],
         knob: 'slider-knob', fill: 'slider-fill', track: 'time-slider', from: 263, start: 463, to: 663,
-        activate: { on: 'year-5', off: 'year-3' },
+        trees: [{ x: 263, layer: 'year-0' }, { x: 463, layer: 'year-3' }, { x: 663, layer: 'year-5' }], // 손잡이가 머무는 구간의 나무가 컬러
       },
       // 05 조건 켜기: 빛·물·CO₂가 모두 꺼진 채 시작. 켤 때마다 초록 + "no ~" 표시 사라짐. 다 켜면 재생되며 나무가 자란다
       // 원래 영상은 'CO₂를 끄면 안 자란다'는 내용이라 반대되는 no-CO₂ 그래프 선·결론·자막은 숨긴다
@@ -54,6 +54,21 @@ export const TODAY = [
       // 07 확인 문제
       { type: 'answer', scene: '07_check', at: 1616, split: checkOptions(), options: ['option-1', 'option-2', 'option-3'], answer: 'option-2' },
     ],
+    // 영상 마지막 Recap (Figma 11657:2163). 영상 뒤에 seconds 동안 이어서 나온다
+    recap: {
+      seconds: 6,
+      caption: '“You predicted, you tested, and the data showed where the mass comes from.”',
+      // 01 예측에서 고른 카드 → 문구. correct면 그대로, 아니면 취소선 + ruledOut
+      prediction: {
+        scene: '01_predict',
+        texts: { 'choice-soil': 'It came from the soil', 'choice-water': 'It came from water', 'choice-air': 'It came from the air' },
+        correct: 'choice-air', ruledOut: 'Tested and ruled out', confirmed: 'Confirmed by the data',
+      },
+      cards: [
+        { label: 'My experiment', html: 'Soil −0.06 kg<br />No CO₂, no growth' },
+        { label: 'Principle', html: 'Photosynthesis turns<br /><mark>CO₂</mark> into the tree' },
+      ],
+    },
     description: 'In today’s class, we learned how van Helmont’s experiment showed that a tree’s mass doesn’t come from the soil, and how light turns carbon dioxide and water into glucose.',
     quiz: {
       question: 'Where does most of a tree’s mass come from?',

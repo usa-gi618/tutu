@@ -5,6 +5,7 @@
 //   길게 누르기 : 오른쪽 절반 = 2배속 빨리 감기, 왼쪽 절반 = 2배속 되감기 (누르는 동안만)
 //   재생바 드래그 : 원하는 위치로 이동
 //   영상 속 인터랙션(고르기, 끌어다 놓기, 마이크) 지점에 오면 멈추고, 학생이 조작을 끝내면 이어서 재생
+//   Lottie가 끝나면 Recap(있으면, Figma 11657:2163)이 이어서 나오고, 끝나면 종료 화면(Figma 11658:5370)
 /* global lottie */
 import { TODAY } from '../../data/lectures.js';
 import { state } from '../../js/state.js';
@@ -26,6 +27,29 @@ const ICON_PLAY = `
     <path d="M24 18.5 L41 29.5 L24 40.5 Z" fill="#fff" stroke="#fff" stroke-width="3" stroke-linejoin="round" />
   </svg>`;
 
+// 영상 마지막 Recap 화면. My prediction 카드는 학생이 고른 카드로 재생 중에 채운다.
+function recapHtml(recap) {
+  if (!recap) return '';
+  return `
+    <div class="recap">
+      <div class="recap-chip">Recap</div>
+      <div class="recap-cards">
+        ${recap.prediction ? `
+          <div class="recap-card">
+            <p class="recap-label">My prediction</p>
+            <p class="recap-main prediction"></p>
+            <p class="recap-note"></p>
+          </div>` : ''}
+        ${recap.cards.map((c) => `
+          <div class="recap-card">
+            <p class="recap-label">${c.label}</p>
+            <p class="recap-main">${c.html}</p>
+          </div>`).join('')}
+      </div>
+      <p class="recap-caption">${recap.caption}</p>
+    </div>`;
+}
+
 const clock = (sec) => `${Math.floor(sec / 60)}:${String(Math.floor(sec % 60)).padStart(2, '0')}`;
 
 export default {
@@ -34,6 +58,7 @@ export default {
     return `
       <div class="land">
         <div class="video"></div>
+        ${recapHtml(l.recap)}
         <div class="speed"></div>
 
         <div class="controls">
@@ -62,6 +87,16 @@ export default {
             <img class="face" src="assets/player-mascot.svg" alt="" />
           </button>
         </div>
+
+        <div class="finish">
+          <img class="finish-mark" src="assets/finish-mark.svg" alt="" />
+          <p class="finish-title">You finished the lecture.</p>
+          <p class="finish-sub">Two quick questions to lock it in.</p>
+          <div class="finish-btns">
+            <button class="rewatch" type="button">Rewatch</button>
+            <button class="start-questions" type="button">Start questions</button>
+          </div>
+        </div>
       </div>
     `;
   },
@@ -79,6 +114,13 @@ export default {
 
     let lesson = null;
     let anim = null;
+    // 영상 타임라인: Lottie(0 ~ videoEnd) + Recap(videoEnd ~ END)
+    let videoEnd = 0;
+    let END = 0;
+    let scenes = [];
+    let segments = [];
+    const recapEl = el.querySelector('.recap');
+    const finishEl = el.querySelector('.finish');
     let frame = 0;
     let playing = false;
     let baseFrame = 0;         // 재생 시작 기준
@@ -176,15 +218,30 @@ export default {
         endHold();
         return stopAt(gate);
       }
-      if (frame >= lesson.data.op) {
+      if (frame >= END) {
         endHold();
-        frame = lesson.data.op;
-        state.watched.add(index); // 끝까지 봄
-        pause();
-        showControls(true);
-        return;
+        return finishVideo();
       }
       render();
+    }
+
+    // ---- 끝 ----
+    function finishVideo() {
+      frame = END;
+      state.watched.add(index); // 끝까지 봄
+      pause();
+      controls.classList.remove('show');
+      finishEl.classList.add('show');
+    }
+    function fillRecap() {
+      const p = lecture.recap?.prediction;
+      if (!p) return;
+      const choice = gates.find((g) => g.scene === p.scene)?.choice;
+      const main = recapEl.querySelector('.prediction');
+      const note = recapEl.querySelector('.recap-note');
+      main.textContent = p.texts[choice] ?? 'No prediction';
+      main.classList.toggle('ruled-out', !!choice && choice !== p.correct);
+      note.textContent = !choice ? '' : choice === p.correct ? p.confirmed : p.ruledOut;
     }
 
     // 길게 누르기: 누르는 동안 빨리 감기(dir 1) / 되감기(dir -1)
@@ -206,30 +263,25 @@ export default {
       hold = null;
       rate = 1;
       speedBadge.classList.remove('show');
-      if (wasPlaying && !awaiting && frame < lesson.data.op) play();
+      if (wasPlaying && !awaiting && frame < END) play();
       else pause();
     }
 
     // 탭: 지금 조각을 건너뛰고 다음 조각부터 (인터랙션은 건너뛰지 않는다)
     function skip() {
-      const next = lesson.segments.find((s) => s.start > frame + 1);
-      const to = next ? next.start : lesson.data.op;
+      const next = segments.find((s) => s.start > frame + 1);
+      const to = next ? next.start : END;
       const gate = gates.find((g) => !g.done && g.at >= frame && g.at <= to);
       if (gate) return stopAt(gate);
-      if (!next) {
-        frame = lesson.data.op;
-        state.watched.add(index);
-        pause();
-        return showControls(true);
-      }
+      if (!next) return finishVideo();
       play(to);
     }
 
     // 프레임 → 재생바 위 x (장면 구간 사이 틈을 고려)
     function barX(f) {
-      for (let i = 0; i < lesson.scenes.length; i += 1) {
-        const s = lesson.scenes[i];
-        if (f <= s.end || i === lesson.scenes.length - 1) {
+      for (let i = 0; i < scenes.length; i += 1) {
+        const s = scenes[i];
+        if (f <= s.end || i === scenes.length - 1) {
           const segEl = bar.children[i];
           const p = Math.max(0, Math.min(1, (f - s.start) / (s.end - s.start)));
           return segEl.offsetLeft + segEl.offsetWidth * p;
@@ -239,9 +291,15 @@ export default {
     }
 
     function render() {
-      anim.goToAndStop(frame, true);
-      timeText.textContent = `${clock(frame / lesson.fr)} / ${clock(lesson.total / lesson.fr)}`;
-      lesson.scenes.forEach((s, i) => {
+      anim.goToAndStop(Math.min(frame, videoEnd), true);
+      if (recapEl) {
+        const inRecap = frame >= videoEnd;
+        if (inRecap && !recapEl.classList.contains('show')) fillRecap();
+        recapEl.classList.toggle('show', inRecap);
+      }
+      if (frame < END) finishEl.classList.remove('show');
+      timeText.textContent = `${clock(frame / lesson.fr)} / ${clock(END / lesson.fr)}`;
+      scenes.forEach((s, i) => {
         const fill = bar.children[i].firstElementChild;
         const p = Math.max(0, Math.min(1, (frame - s.start) / (s.end - s.start)));
         fill.style.width = `${p * 100}%`;
@@ -261,9 +319,9 @@ export default {
     function seekTo(e) {
       const x = toLand(e).x - progress.offsetLeft;
       const segEls = [...bar.children];
-      let f = lesson.data.op;
+      let f = END;
       for (let i = 0; i < segEls.length; i += 1) {
-        const s = lesson.scenes[i];
+        const s = scenes[i];
         const left = segEls[i].offsetLeft;
         const right = left + segEls[i].offsetWidth;
         if (x <= right + 3) {
@@ -272,7 +330,7 @@ export default {
           break;
         }
       }
-      f = Math.min(f, lesson.data.op);
+      f = Math.min(f, END - 1);
       if (f < frame) resetGatesAfter(f);
       awaiting = null;
       frame = f;
@@ -281,7 +339,7 @@ export default {
 
     let gesture = null;
     land.addEventListener('pointerdown', (e) => {
-      if (!lesson) return;
+      if (!lesson || finishEl.classList.contains('show')) return; // 종료 화면에서는 버튼만
       land.setPointerCapture(e.pointerId);
       clearTimeout(hideTimer); // 만지는 동안은 숨기지 않는다
 
@@ -361,7 +419,15 @@ export default {
     toggleBtn.addEventListener('click', () => {
       if (awaiting) return keepControls(); // 조작을 끝내야 이어서 재생
       if (playing) return pause();
-      play(frame >= lesson.data.op ? 0 : frame);
+      play(frame >= END ? 0 : frame);
+    });
+    // 종료 화면
+    el.querySelector('.rewatch').addEventListener('click', () => {
+      finishEl.classList.remove('show');
+      play(0);
+    });
+    el.querySelector('.start-questions').addEventListener('click', () => {
+      // TODO: 문제풀이 화면
     });
     el.querySelectorAll('.lang-btn').forEach((b) => b.addEventListener('click', () => {
       // TODO: 스페인어 음성/자막이 생기면 전환
@@ -374,7 +440,15 @@ export default {
     loadLesson(lecture).then((l) => {
       if (disposed) return;
       lesson = l;
-      bar.innerHTML = l.scenes.map((s) => `<div class="seg" style="flex:${s.end - s.start}"><i></i></div>`).join('');
+      videoEnd = l.data.op;
+      END = videoEnd + (lecture.recap ? lecture.recap.seconds * l.fr : 0);
+      scenes = [...l.scenes];
+      segments = [...l.segments];
+      if (lecture.recap) {
+        scenes.push({ id: 'recap', start: videoEnd, end: END });
+        segments.push({ scene: 'recap', caption: lecture.recap.caption, start: videoEnd, end: END });
+      }
+      bar.innerHTML = scenes.map((s) => `<div class="seg" style="flex:${s.end - s.start}"><i></i></div>`).join('');
       anim = lottie.loadAnimation({
         container: el.querySelector('.video'),
         renderer: 'svg',
@@ -390,6 +464,7 @@ export default {
           .map((it) => {
             const g = createInteraction(it, svg, toSvg, () => finish(g));
             g.early = it.early; // 이 프레임부터는 재생 중에도 조작 가능
+            g.scene = it.scene;
             // 재생바 위 검은 점: 학생이 고르거나 조작해야 하는 지점
             g.dot = document.createElement('i');
             g.dot.className = 'gate-dot';

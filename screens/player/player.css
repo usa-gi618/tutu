@@ -240,3 +240,112 @@
   height: 40px;
   transform: rotate(90deg); /* Figma에서 세로 기준으로 그려진 아이콘 */
 }
+
+/* ---- 영상 마지막 Recap (Figma 11657:2163) ---- */
+.screen-player .recap {
+  position: absolute;
+  inset: 0;
+  background: #f5f5f5;
+  color: #000;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+.screen-player .recap.show { opacity: 1; }
+.screen-player .recap-chip {
+  position: absolute;
+  left: 20px;
+  top: 18px;
+  height: 26px;
+  padding: 0 12px;
+  border-radius: 13px;
+  background: #fff;
+  font-size: 12px;
+  font-weight: 590;
+  line-height: 26px;
+}
+.screen-player .recap-cards {
+  position: absolute;
+  left: 40px;
+  right: 40px;
+  top: 112px;
+  display: flex;
+  gap: 14px;
+}
+.screen-player .recap-card {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  height: 150px;
+  padding: 20px 24px;
+  border-radius: 20px;
+  background: #fff;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+/* 카드가 하나씩 차례로 나타난다 */
+.screen-player .recap.show .recap-card { opacity: 1; transform: none; }
+.screen-player .recap.show .recap-card:nth-child(2) { transition-delay: 0.6s; }
+.screen-player .recap.show .recap-card:nth-child(3) { transition-delay: 1.2s; }
+.screen-player .recap-label { font-size: 14px; font-weight: 700; color: #8e8e8e; }
+.screen-player .recap-main { margin-top: 14px; font-size: 19px; font-weight: 700; line-height: 26px; }
+.screen-player .recap-main mark { background: #fffd6c; color: inherit; padding: 0 1px; }
+.screen-player .recap-main.ruled-out {
+  color: #ababab;
+  text-decoration: line-through;
+  text-decoration-color: #6e6e6e;
+  text-decoration-thickness: 2.5px;
+}
+.screen-player .recap-note {
+  position: absolute;
+  left: 24px;
+  bottom: 20px;
+  font-size: 14px;
+  color: #6e6e6e;
+}
+.screen-player .recap-caption {
+  position: absolute;
+  left: 50%;
+  bottom: 30px;
+  transform: translateX(-50%);
+  height: 28px;
+  padding: 0 14px;
+  border-radius: 14px;
+  background: #000;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 28px;
+  white-space: nowrap;
+}
+
+/* ---- 영상 종료 화면 (Figma 11658:5370) ---- */
+.screen-player .finish {
+  position: absolute;
+  inset: 0;
+  padding-bottom: 40px;
+  background: #f5f5f5;
+  color: #000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+.screen-player .finish.show { opacity: 1; pointer-events: auto; }
+.screen-player .finish-mark { width: 74px; height: 74px; }
+.screen-player .finish-title { margin-top: 18px; font-size: 32px; font-weight: 700; }
+.screen-player .finish-sub { margin-top: 10px; font-size: 17px; font-weight: 700; color: #6e6e6e; }
+.screen-player .finish-btns { margin-top: 26px; display: flex; gap: 14px; }
+.screen-player .finish-btns button {
+  height: 50px;
+  padding: 0 28px;
+  border-radius: 25px;
+  font-size: 17px;
+  font-weight: 700;
+}
+.screen-player .rewatch { background: #fff; border: 2px solid #000; color: #000; }
+.screen-player .start-questions { background: #000; color: #fff; }
