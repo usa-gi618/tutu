@@ -1,15 +1,16 @@
 /* Figma 11584:1963 (강의 시작, 가로)
    Figma 프레임은 세로(428 x 926) 안에 내용이 -90° 돌아가 있다.
-   여기서는 가로(926 x 428) 좌표로 배치한 뒤 통째로 돌려서 세로 화면에 넣는다. */
+   여기서는 가로 좌표(Figma 기준 926 x 428)로 배치한 뒤 통째로 돌려서 세로 화면에 넣는다.
+   가로 크기 = 화면 높이, 세로 크기 = 화면 너비 (100cqh / 100cqw). 오른쪽·아래 요소는 right / bottom 기준. */
 
 .screen-lecture .land {
   position: absolute;
   left: 0;
   top: 0;
-  width: 926px;
-  height: 428px;
+  width: 100cqh;
+  height: 100cqw;
   transform-origin: 0 0;
-  transform: translateY(926px) rotate(-90deg);
+  transform: translateY(100cqh) rotate(-90deg);
   background: linear-gradient(to bottom, #fefee1 0%, #fff 56.542%);
   color: #111;
 }
@@ -36,8 +37,8 @@
 .screen-lecture .info {
   position: absolute;
   left: 52px;
+  right: 250px; /* 오른쪽 Do Not Disturb / PLAY 자리 */
   top: 87px;
-  width: 600px;
 }
 
 .screen-lecture .from {
@@ -50,7 +51,7 @@
 
 .screen-lecture .title {
   margin-top: 7px;
-  font-size: 64px;
+  font-size: min(64px, 6.9cqh); /* 926 가로에서 64px, 작은 폰에서는 비율대로 작게 */
   font-weight: 700;
   line-height: 1.1;
   letter-spacing: -1.92px;
@@ -76,7 +77,7 @@
 
 .screen-lecture .dnd {
   position: absolute;
-  left: 712px;
+  right: 56px;
   top: 88px;
   width: 158px;
   height: 28px;
@@ -93,8 +94,8 @@
 
 .screen-lecture .play {
   position: absolute;
-  left: 699px;
-  top: 335px;
+  right: 56px;
+  bottom: 40px;
   width: 171px;
   height: 53px;
   padding: 10px 27px 13.576px;

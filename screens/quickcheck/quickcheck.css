@@ -18,8 +18,8 @@
 .screen-quickcheck .lecture {
   position: absolute;
   left: 30px;
+  right: 30px;
   top: 128px;
-  width: 368px;
   height: 76px;
   border-radius: 8px;
   background: #f1f1f1;
@@ -30,8 +30,8 @@
 .screen-quickcheck .question {
   position: absolute;
   left: 31px;
+  right: 82px;
   top: 256px;
-  width: 315px;
   transform: translateY(-50%);
   font-size: 20px;
   font-weight: 700;
@@ -42,7 +42,7 @@
 .screen-quickcheck .option {
   position: absolute;
   left: 30px;
-  width: 368px;
+  right: 30px;
   height: 54px;
   padding: 10px 20px;
   border-radius: 16px;
@@ -63,8 +63,8 @@
 .screen-quickcheck .cta {
   position: absolute;
   left: 24px;
-  top: 841px;
-  width: 380px;
+  right: 24px;
+  bottom: 21px;
   height: 64px;
   border-radius: 8px;
   background: #000;

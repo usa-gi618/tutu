@@ -16,10 +16,10 @@ const DAYS = [
 // 드럼: 카드가 반지름 R인 원호를 따라 지나간다. 카드는 눕지 않고 똑바로 선 채,
 // 위(뒤)로 갈수록 작아지고 간격이 좁아져 원근감이 생긴다.
 // 0번 칸(맨 위, 가장 뒤)이 -60°, 칸마다 20°씩 앞으로 내려온다. 0° = 맨 앞.
-const R = 483;
 const FIRST_DEG = -60;
 const STEP_DEG = 20;
-const TOP_Y = 262;       // 0번 칸 카드 윗변 y
+const TOP_Y = 262;       // 0번 칸(맨 위) 카드 윗변 y
+const FRONT_FROM_BOTTOM = 246; // 맨 앞 칸 카드 윗변이 화면 아래에서 떨어진 거리 (Figma 926 - 680)
 const DEPTH = 0.36;      // 가장 뒤 카드가 줄어드는 정도
 const PX_PER_SLOT = 130; // 이만큼 드래그하면 한 칸 이동
 const TAP_SLOP = 8;
@@ -29,7 +29,7 @@ const lerp = (a, b, t) => a + (b - a) * t;
 const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
 
 // q: 칸 위치(실수). -0.5 ~ n-0.5 범위
-function slotStyle(q, n) {
+function slotStyle(q, n, R) {
   const deg = FIRST_DEG + q * STEP_DEG;
   const y = TOP_Y + R * (Math.sin(rad(deg)) - Math.sin(rad(FIRST_DEG)));
   const scale = 1 - DEPTH * (1 - Math.cos(rad(deg)));
@@ -87,11 +87,24 @@ export default {
     let pressed = -1;   // 선택(뽑힌) 카드
     let anim = null;
 
+    // 화면 높이에 맞춰 드럼 반지름을 정한다 (맨 위 칸 ~ 맨 앞 칸이 화면 안에 들어오게)
+    let radius = 0;
+    function measure() {
+      const frontY = el.clientHeight - FRONT_FROM_BOTTOM;
+      radius = Math.max(160, (frontY - TOP_Y) / -Math.sin(rad(FIRST_DEG)));
+    }
+    measure();
+    window.addEventListener('resize', onResize);
+    function onResize() {
+      measure();
+      draw();
+    }
+
     function draw() {
       cards.forEach((card, i) => {
         // 무한 반복: -0.5 ~ n-0.5 범위로 감싼다
         const q = ((((i - offset) + 0.5) % n) + n) % n - 0.5;
-        const s = slotStyle(q, n);
+        const s = slotStyle(q, n, radius);
         card.style.transform = `translateY(${s.y}px) scale(${s.scale})`;
         card.style.opacity = s.opacity;
         card.style.zIndex = i === pressed ? 100 : Math.round((q + 1) * 10);
@@ -165,6 +178,9 @@ export default {
     el.querySelector('.cta').addEventListener('click', () => go('quickcheck'));
 
     draw();
-    return () => cancelAnimationFrame(anim);
+    return () => {
+      cancelAnimationFrame(anim);
+      window.removeEventListener('resize', onResize);
+    };
   },
 };

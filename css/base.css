@@ -21,32 +21,30 @@ body {
 button { border: 0; background: none; font: inherit; color: inherit; cursor: pointer; }
 img { -webkit-user-drag: none; }
 
-/*
-  iPhone 14 Plus: 428 x 926pt. Figma 좌표를 그대로 쓰는 무대.
-  위 47pt(Figma 상태바 자리)는 실제 상태바 뒤로 숨기고, 나머지 428 x 879를 화면에 맞춘다.
-  위치·배율은 js/app.js의 fitStage()가 정한다.
-  - 홈 화면 앱: 보이는 영역이 딱 428 x 879 → 원래 크기 그대로
-  - Safari 브라우저: 주소창 때문에 영역이 작으면 그만큼 줄여서 전부 보이게
-*/
+/* 보이는 영역 전체를 쓰는 무대 (크기를 줄이지 않고 반응형으로 배치) */
 .stage {
   position: fixed;
-  left: 50%;
-  top: 0;
-  width: 428px;
-  height: 926px;
-  margin-left: -214px;
-  transform-origin: 50% 0;
-  transform: translateY(-47px);
+  inset: 0;
   overflow: hidden;
   background: #fff;
 }
 
-/* 화면 하나 = stage를 꽉 채우는 레이어. 전환 애니메이션은 js/app.js */
+/*
+  화면 하나. Figma(iPhone 14 Plus, 428 x 926) 기준으로 배치하되
+  - 위쪽 요소는 위에서부터 Figma 좌표 그대로 (top)
+  - 아래쪽 버튼 등은 아래에서부터 (bottom = 926 - Figma 아랫변)
+  - 좌우는 양쪽 여백으로 (left / right) 잡아서 화면 너비에 맞춰 늘어난다.
+  Figma 맨 위 47pt(상태바 자리)는 화면 밖으로 올려 실제 상태바 자리와 맞춘다.
+*/
 .screen {
   position: absolute;
-  inset: 0;
+  left: 0;
+  right: 0;
+  top: -47px;
+  bottom: 0;
   overflow: hidden;
   background: #fff;
+  container-type: size; /* 가로 화면(강의)이 이 크기를 기준으로 돈다 */
 }
 .stage.busy { pointer-events: none; } /* 전환 중 연타 방지 */
 .screen.grad { background: linear-gradient(to bottom, #ffffe2 0%, #fff 35.799%); }

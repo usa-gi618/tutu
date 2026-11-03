@@ -9,7 +9,6 @@ import { TODAY } from '../../data/lectures.js';
 import { state } from '../../js/state.js';
 import { loadLesson } from '../../js/lessons.js';
 
-const LAND_W = 926;
 const HOLD_MS = 400;
 const SWIPE_PX = 40;
 const MOVE_SLOP = 10;
@@ -46,10 +45,11 @@ export default {
           <div class="title">${l.title}</div>
           <div class="subject">${l.subject}</div>
 
-          <div class="lang glass"></div>
-          <div class="lang-thumb"></div>
-          <button class="lang-btn en" type="button" data-lang="en">EN</button>
-          <button class="lang-btn es" type="button" data-lang="es">ES</button>
+          <div class="lang glass">
+            <div class="lang-thumb"></div>
+            <button class="lang-btn en" type="button" data-lang="en">EN</button>
+            <button class="lang-btn es" type="button" data-lang="es">ES</button>
+          </div>
 
           <button class="toggle glass" type="button" aria-label="Play / Pause">${ICON_PAUSE}</button>
           <div class="time glass"><span>0:00 / 0:00</span></div>
@@ -89,8 +89,7 @@ export default {
     // 화면 좌표 → 가로 화면 좌표
     function toLand(e) {
       const r = el.getBoundingClientRect();
-      const scale = r.width / el.offsetWidth; // 무대가 화면에 맞춰 줄어든 비율
-      return { x: LAND_W - (e.clientY - r.top) / scale, y: (e.clientX - r.left) / scale };
+      return { x: r.height - (e.clientY - r.top), y: e.clientX - r.left };
     }
 
     function segmentAt(f) {

@@ -1,6 +1,7 @@
 .screen-onboarding .logo {
-  left: 143px;
-  top: 434.82px;
+  left: 50%;
+  margin-left: -70.5px;
+  top: calc(50% - 28.18px);
   width: 141px;
   height: 43.922px;
 }
@@ -8,7 +9,7 @@
 .screen-onboarding .tagline {
   position: absolute;
   left: 50%;
-  top: 509.5px;
+  top: calc(50% + 46.5px);
   transform: translate(-50%, -50%);
   font-size: 18px;
   font-weight: 400;

@@ -14,7 +14,7 @@
 }
 .screen-library .home-btn {
   position: absolute;
-  left: 363px;
+  right: 26px;
   top: 75px;
   width: 39px;
   height: 39px;
@@ -24,8 +24,8 @@
 .screen-library .chips {
   position: absolute;
   left: 0;
+  right: 0;
   top: 129px;
-  width: 428px;
   display: flex;
   gap: 8px;
   padding: 0 21px;
@@ -53,8 +53,8 @@
 .screen-library .list {
   position: absolute;
   left: 0;
+  right: 0;
   top: 170px;
-  width: 428px;
   bottom: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -62,7 +62,7 @@
   scrollbar-width: none;
   padding: 15px 20px 60px;
   display: grid;
-  grid-template-columns: 185px 185px;
+  grid-template-columns: repeat(2, minmax(0, 1fr)); /* 화면 너비에 맞춰 두 칸 */
   grid-auto-rows: 168px;
   column-gap: 18px;
   row-gap: 15px;
@@ -82,7 +82,7 @@
 
 .screen-library .card-globe {
   position: absolute;
-  left: 73px;
+  right: -108.724px;
   top: 51px;
   width: 220.724px;
   height: 277.966px;
@@ -90,21 +90,25 @@
 }
 .screen-library .card.watched .card-globe { display: none; }
 
-.screen-library .card .title {
+.screen-library .card .head {
   position: absolute;
   left: 17px;
+  right: 3px;
   top: 14.6px;
-  width: 165px;
+}
+.screen-library .card .title {
   font-size: 20px;
   font-weight: 700;
   line-height: 1.2;
   letter-spacing: -0.8px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3; /* 너무 길면 세 줄까지 */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
+/* 제목 아래에 붙는다 (제목이 길면 같이 내려감) */
 .screen-library .card .period {
-  position: absolute;
-  left: 17px;
-  top: 73.5px;
-  transform: translateY(-50%);
+  margin-top: 4.3px;
   font-size: 11px;
   font-weight: 510;
   line-height: 1.2;

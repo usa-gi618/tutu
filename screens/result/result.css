@@ -66,7 +66,7 @@
 
 .screen-result .card-globe {
   position: absolute;
-  left: 214px;
+  right: -54.724px;
   top: 14px;
   width: 220.724px;
   height: 277.966px;
@@ -74,7 +74,7 @@
 }
 .screen-result .card .subject { left: 23px; top: 33.6px; font-size: 20px; font-weight: 700; line-height: 1.2; letter-spacing: -0.8px; }
 .screen-result .card .title { left: 23.24px; top: 58.72px; font-size: 15px; font-weight: 510; line-height: 1.2; letter-spacing: -0.6px; }
-.screen-result .card .period { left: 268.4px; top: 29.64px; font-size: 15px; font-weight: 510; line-height: 1.2; letter-spacing: -0.6px; color: #5b5b5b; }
+.screen-result .card .period { right: 18.7px; top: 29.64px; font-size: 15px; font-weight: 510; line-height: 1.2; letter-spacing: -0.6px; color: #5b5b5b; }
 
 /* Pass / Review 도장: 흰색 번짐 위에 글자 */
 .screen-result .stamp {
@@ -89,14 +89,14 @@
   white-space: nowrap;
   text-shadow: 0 0 4px #fff;
 }
-.screen-result .card.pass .stamp { left: 239px; color: #8b8b8b; }
+.screen-result .card.pass .stamp { right: 13px; color: #8b8b8b; }
 .screen-result .card.review .stamp { right: 13px; top: 129.5px; color: #323232; }
 
 .screen-result .fade {
   position: absolute;
   left: 0;
-  top: 801px;
-  width: 428px;
+  right: 0;
+  bottom: 0;
   height: 125px;
   background: linear-gradient(to bottom, rgba(255, 255, 255, 0), #fff);
   pointer-events: none;
@@ -104,8 +104,8 @@
 .screen-result .cta {
   position: absolute;
   left: 24px;
-  top: 844px;
-  width: 380px;
+  right: 24px;
+  bottom: 18px;
   height: 64px;
   border-radius: 8px;
   background: #000;

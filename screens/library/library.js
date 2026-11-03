@@ -16,8 +16,10 @@ function card(l) {
   return `
     <div class="card ${l.status}">
       <div class="card-globe"><img class="fill" src="assets/globe.svg" alt="" /></div>
-      <p class="title">${l.title}</p>
-      <div class="period">${l.period}</div>
+      <div class="head">
+        <p class="title">${l.title}</p>
+        <div class="period">${l.period}</div>
+      </div>
       <div class="status">${status}</div>
       <button class="action" type="button">${action}</button>
     </div>`;

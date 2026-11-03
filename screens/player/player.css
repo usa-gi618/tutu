@@ -1,14 +1,15 @@
 /* Figma 11540:2496 (영상 + 제어 화면, 가로)
-   강의 시작 화면처럼 가로(926 x 428) 좌표로 배치하고 통째로 돌려서 세로 화면에 넣는다. */
+   강의 시작 화면처럼 가로 좌표로 배치하고 통째로 돌려서 세로 화면에 넣는다.
+   가로 크기 = 화면 높이, 세로 크기 = 화면 너비. 오른쪽·아래 요소는 right / bottom 기준. */
 
 .screen-player .land {
   position: absolute;
   left: 0;
   top: 0;
-  width: 926px;
-  height: 428px;
+  width: 100cqh;
+  height: 100cqw;
   transform-origin: 0 0;
-  transform: translateY(926px) rotate(-90deg);
+  transform: translateY(100cqh) rotate(-90deg);
   background: #f1f1f1;
   overflow: hidden;
   touch-action: none;
@@ -83,7 +84,7 @@
 /* 언어 전환 EN / ES */
 .screen-player .lang {
   position: absolute;
-  left: 764px;
+  right: 29px;
   top: 23px;
   width: 133px;
   height: 47px;
@@ -91,8 +92,8 @@
 }
 .screen-player .lang-thumb {
   position: absolute;
-  left: 768px;
-  top: 26px;
+  left: 4px;
+  top: 3px;
   width: 72px;
   height: 40px;
   border-radius: 33px;
@@ -102,7 +103,7 @@
 .screen-player .lang-thumb.es { transform: translateX(72px); width: 53px; }
 .screen-player .lang-btn {
   position: absolute;
-  top: 26px;
+  top: 3px;
   height: 40px;
   font-size: 16px;
   font-weight: 700;
@@ -111,14 +112,14 @@
   color: #fff;
   text-align: center;
 }
-.screen-player .lang-btn.en { left: 768px; width: 72px; }
-.screen-player .lang-btn.es { left: 840px; width: 53px; }
+.screen-player .lang-btn.en { left: 4px; width: 72px; }
+.screen-player .lang-btn.es { left: 76px; width: 53px; }
 
 /* 재생 / 일시정지 */
 .screen-player .toggle {
   position: absolute;
   left: 24px;
-  top: 345px;
+  bottom: 24px;
   width: 59px;
   height: 59px;
   border-radius: 50%;
@@ -129,7 +130,7 @@
 .screen-player .time {
   position: absolute;
   left: 105px;
-  top: 361px;
+  bottom: 32px;
   min-width: 93px;
   height: 35px;
   padding: 0 14px;
@@ -151,8 +152,8 @@
 .screen-player .progress {
   position: absolute;
   left: 205px;
-  top: 358px;
-  width: 565px;
+  right: 156px;
+  bottom: 28px;
   height: 42px; /* 손가락으로 잡기 쉽게 넓은 터치 영역 */
 }
 .screen-player .bar {
@@ -195,8 +196,8 @@
 /* 마스코트 버튼 */
 .screen-player .mascot {
   position: absolute;
-  left: 793px;
-  top: 340px;
+  right: 24px;
+  bottom: 28px;
   width: 109px;
   height: 60px;
 }

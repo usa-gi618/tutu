@@ -52,19 +52,6 @@ function go(name, { transition = 'push' } = {}) {
   });
 }
 
-// 무대(428 x 926)를 보이는 영역에 맞춘다. 위 47pt(상태바 자리)는 화면 밖으로.
-const DESIGN_W = 428;
-const DESIGN_H = 926;
-const HIDDEN_TOP = 47;
-function fitStage() {
-  const visibleH = DESIGN_H - HIDDEN_TOP;
-  const scale = Math.min(1, window.innerWidth / DESIGN_W, window.innerHeight / visibleH);
-  const y = (window.innerHeight - visibleH * scale) / 2 - HIDDEN_TOP * scale;
-  stage.style.transform = `translateY(${y}px) scale(${scale})`;
-}
-fitStage();
-window.addEventListener('resize', fitStage);
-
 // 개발용: 주소 끝에 #home, #player 처럼 붙이면 그 화면에서 바로 시작
 const start = location.hash.slice(1);
 go(screens[start] ? start : 'onboarding');
