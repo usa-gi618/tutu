@@ -26,6 +26,19 @@
   <script src="vendor/lottie_svg.min.js"></script>
   <script type="module" src="js/app.js"></script>
   <script>
+    // iOS Safari는 폰을 돌렸다 돌아오면 확대된 채로 남을 때가 있다 → 돌릴 때마다 배율을 1로 되돌린다
+    (() => {
+      const vp = document.querySelector('meta[name="viewport"]');
+      const base = vp.content;
+      const reset = () => {
+        vp.content = base + ', minimum-scale=1';
+        requestAnimationFrame(() => { vp.content = base; });
+      };
+      window.addEventListener('orientationchange', reset);
+      window.visualViewport?.addEventListener('resize', () => { if (visualViewport.scale > 1.01) reset(); });
+    })();
+  </script>
+  <script>
     // 개발용 라이브 리로드 (serve.py로 띄웠을 때만 동작)
     // 보고 있는 탭만 연결한다 (뒤에 쌓인 탭들이 연결을 붙잡으면 브라우저 연결 수가 차서 새 페이지가 안 뜬다)
     if (location.port === '8000') {
