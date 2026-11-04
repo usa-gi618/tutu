@@ -20,4 +20,5 @@ export const state = {
   mastered: new Set(),
   // 선생님 앱에서 보고 있던 화면 (학생 플레이어로 미리 보기 갔다가 돌아올 때)
   teacherStep: null,
+  afterOnboarding: null, // 시작 화면 다음에 갈 곳 (없으면 홈)
 };

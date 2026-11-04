@@ -1,6 +1,6 @@
 // 선생님 앱 (임시로 학생 앱 안에). 홈 화면 "Up next" 제목을 빠르게 4번 탭하면 들어온다.
 // 시작 화면(녹화 동의)의 제목을 4번 탭하면 학생 앱 시작 화면으로 돌아간다.
-// 마지막 화면(Who watched it)에서 왼쪽으로 밀면 선생님 앱 시작 화면으로.
+// 마지막 화면(Who watched it)에서 왼쪽으로 밀거나 제목을 4번 탭하면 선생님 앱 시작 화면으로.
 // Figma 11687:3556 ~ 11689:4200 (와이어프레임이 섞인 화면은 앱 디자인으로 맞춤)
 //   consent → notify → record → build → lecture → help → watched
 import { TODAY } from '../../data/lectures.js';
@@ -129,7 +129,7 @@ const VIEWS = {
     const questions = STUDENTS.filter((s) => s.question).length;
     return `
       <p class="top light">Period 3 · Algebra 1 · Oct 27</p>
-      <h1>Who watched it</h1>
+      <h1 data-home>Who watched it</h1>
       <p class="tally"><b>${done} of ${STUDENTS.length}</b><span>watched · ${questions} question</span></p>
       <ul class="students">
         ${STUDENTS.map((s) => `
@@ -204,16 +204,25 @@ export default {
       }
     }
 
-    // 시작 화면 제목 4번 탭 → 학생 앱 시작 화면으로
-    let exitTaps = [];
+    // 제목 4번 탭: 시작 화면 → 학생 앱 시작 화면, 마지막 화면 → 선생님 앱 시작 화면
+    let titleTaps = [];
+    const fourTaps = () => {
+      const now = performance.now();
+      titleTaps = [...titleTaps.filter((t) => now - t < 1500), now];
+      if (titleTaps.length < 4) return false;
+      titleTaps = [];
+      return true;
+    };
     view.addEventListener('click', (e) => {
       if (e.target.closest('[data-exit]')) {
-        const now = performance.now();
-        exitTaps = [...exitTaps.filter((t) => now - t < 1500), now];
-        if (exitTaps.length >= 4) {
+        if (fourTaps()) {
           state.teacherStep = null;
           go('onboarding', { transition: 'fade' });
         }
+        return;
+      }
+      if (e.target.closest('[data-home]')) {
+        if (fourTaps()) show('consent');
         return;
       }
       if (e.target.closest('[data-next]')) {
@@ -230,7 +239,19 @@ export default {
       if (e.target.closest('[data-answer]')) {
         return e.target.closest('.question').classList.toggle('open');
       }
-      if (e.target.closest('[data-reply]')) return say('Reply sent to Mateo');
+      if (e.target.closest('[data-reply]')) {
+        // 답장을 보내면 질문 패널을 접고 다른 학생들과 같은 줄로
+        const panel = e.target.closest('.question');
+        panel.style.height = `${panel.offsetHeight}px`;
+        panel.getBoundingClientRect();
+        panel.classList.add('closing');
+        panel.style.height = '0px';
+        const row = panel.previousElementSibling;
+        row.classList.remove('has-q');
+        row.querySelector('.avatar i')?.remove();
+        later(() => panel.remove(), 320);
+        return say('Reply sent to Mateo');
+      }
     });
 
     // 마지막 화면(Who watched it)에서 왼쪽으로 밀면 선생님 앱 시작 화면으로

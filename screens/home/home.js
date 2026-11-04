@@ -184,7 +184,8 @@ export default {
       if (titleTaps.length >= 4) {
         titleTaps = [];
         state.teacherStep = null;
-        go('teacher');
+        state.afterOnboarding = 'teacher'; // 선생님 앱도 tutu 시작 화면을 보고 들어간다
+        go('onboarding', { transition: 'fade' });
       }
     });
     el.querySelector('.cta').addEventListener('click', () => go('quickcheck'));
