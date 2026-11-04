@@ -10,12 +10,14 @@ import player from '../screens/player/player.js';
 import review from '../screens/review/review.js';
 import teacher from '../screens/teacher/teacher.js';
 import { setTopColor, topColorOf } from './theme.js';
+import { state } from './state.js';
 
 const screens = { onboarding, home, quickcheck, result, library, lecture, player, review, teacher };
 const stage = document.getElementById('stage');
 const DURATION = 380;
 const EASING = 'cubic-bezier(0.2, 0.8, 0.2, 1)';
-let current = null; // { el, cleanup }
+const IDLE_MS = 60000; // 이만큼 아무 조작이 없으면 학생 홈으로
+let current = null; // { name, el, cleanup }
 
 // 전환 방식
 //   push: 새 화면이 오른쪽에서 밀려 들어옴 (앞으로 가기, 기본값)
@@ -38,7 +40,7 @@ function go(name, { transition = 'push' } = {}) {
   const t = TRANSITIONS[transition];
   if (prev && t.under === 'next') stage.insertBefore(el, prev.el);
   else stage.append(el);
-  current = { el, cleanup: screen.mount?.(el, go) };
+  current = { name, el, cleanup: screen.mount?.(el, go) };
 
   if (!prev) return;
   stage.classList.add('busy');
@@ -55,6 +57,25 @@ function go(name, { transition = 'push' } = {}) {
     stage.classList.remove('busy');
   });
 }
+
+// 1분 동안 아무 조작이 없으면 학생 홈 화면으로 (선생님 앱에서도).
+// 홈·시작 화면에서는 그대로 두고, 영상이 재생 중일 때는 보고 있는 것이므로 기다린다.
+let idleTimer = 0;
+function resetIdle() {
+  clearTimeout(idleTimer);
+  idleTimer = setTimeout(onIdle, IDLE_MS);
+}
+function onIdle() {
+  const videoPlaying = current.name === 'player' && current.el.querySelector('.toggle')?.dataset.playing === 'true';
+  if (current.name !== 'home' && current.name !== 'onboarding' && !videoPlaying) {
+    state.teacherStep = null;
+    state.afterOnboarding = null;
+    go('home', { transition: 'fade' });
+  }
+  resetIdle();
+}
+['pointerdown', 'keydown'].forEach((type) => window.addEventListener(type, resetIdle, { capture: true, passive: true }));
+resetIdle();
 
 // 개발용: 주소 끝에 #home, #player 처럼 붙이면 그 화면에서 바로 시작
 const start = location.hash.slice(1);
