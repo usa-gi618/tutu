@@ -5,6 +5,7 @@
 //   consent → notify → record → build → lecture → help → watched
 import { TODAY } from '../../data/lectures.js';
 import { state } from '../../js/state.js';
+import { setTopColor } from '../../js/theme.js';
 
 const STEPS = ['consent', 'notify', 'record', 'build', 'lecture', 'help', 'watched'];
 const PERIOD = 'Period 3_Algebra 1';
@@ -175,6 +176,7 @@ export default {
         view.innerHTML = VIEWS[name]();
         view.dataset.step = name;
         view.classList.remove('swap');
+        setTopColor(name === 'notify' ? '#24523f' : '#ffffff'); // 잠금화면 배경 위쪽 색
         enter(name);
       }, 180);
     }

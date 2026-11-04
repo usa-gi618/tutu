@@ -23,6 +23,7 @@ const HOLD_MS = 400;  // 길게 누르기로 보는 시간
 const FAST = 2;       // 빨리 감기 / 되감기 배속
 const MOVE_SLOP = 10;
 const HIDE_MS = 3000; // 제어 화면이 저절로 숨기까지
+const MAX_LINES = 3;  // AI 답변 한 번에 보내는 최대 줄 수 (넘치면 나눠서)
 const ICON_PAUSE = `
   <svg width="59" height="59" viewBox="0 0 59 59">
     <rect x="21" y="18" width="6" height="24" rx="3" fill="#fff" />
@@ -72,7 +73,8 @@ function askInner(ask) {
       ${ask.steps.map((s, i) => `${i ? '<span class="ask-arrow">→</span>' : ''}<div class="ask-step"><b>${s.top}</b><span>${s.bottom}</span></div>`).join('')}
       <span class="ask-result">${ask.result}</span>
     </div>
-    <p class="ask-reply"></p>`;
+    <p class="ask-reply"></p>
+    <p class="ask-page"></p>`;
 }
 
 const clock = (sec) => `${Math.floor(sec / 60)}:${String(Math.floor(sec % 60)).padStart(2, '0')}`;
@@ -158,6 +160,8 @@ export default {
     let askTimers = [];
     let askWasPlaying = false;
     let askClosedAt = 0;
+    let askPages = [];  // 답변을 나눈 칸들
+    let askPage = 0;
     const bubble = el.querySelector('.ask-bubble');
     const transcript = el.querySelector('.ask-transcript');
     let reply = el.querySelector('.ask-reply');
@@ -218,14 +222,18 @@ export default {
       return { x: r.height - (e.clientY - r.top), y: e.clientX - r.left };
     }
 
-    // 포인터 → Lottie svg 좌표 (영상은 화면을 꽉 채우도록 잘려서 그려진다)
+    // 포인터 → Lottie svg 좌표 (영상은 안전 여백 안쪽 상자에 잘리지 않고 다 보이게 그려진다)
+    const videoEl = el.querySelector('.video');
     function toSvg(e) {
       const p = toLand(e);
       const { w, h } = lesson.data;
-      const W = land.offsetWidth;
-      const H = land.offsetHeight;
-      const s = Math.max(W / w, H / h);
-      return { x: (p.x - (W - w * s) / 2) / s, y: (p.y - (H - h * s) / 2) / s };
+      const W = videoEl.offsetWidth;
+      const H = videoEl.offsetHeight;
+      const s = Math.min(W / w, H / h);
+      return {
+        x: (p.x - videoEl.offsetLeft - (W - w * s) / 2) / s,
+        y: (p.y - videoEl.offsetTop - (H - h * s) / 2) / s,
+      };
     }
 
     // ---- 제어 화면 보이기 / 숨기기 ----
@@ -434,7 +442,7 @@ export default {
       if (!lesson || finishEl.classList.contains('show')) return; // 종료 화면에서는 버튼만
       if (ask !== 'idle') {
         // 답변 화면에서 탭하면 닫고 영상 이어서
-        if (ask === 'answering') closeAsk();
+        if (ask === 'answering') tapAnswer();
         return;
       }
       land.setPointerCapture(e.pointerId);
@@ -449,7 +457,9 @@ export default {
       if (e.target.closest('button')) return; // 버튼은 click으로 처리
 
       // 끌어다 놓기·슬라이더 인터랙션 (멈춰 있을 때, 또는 early 구간에서는 재생 중에도)
-      const live = awaiting ?? gates.find((g) => !g.done && g.early !== undefined && frame >= g.early && frame <= g.at);
+      // 제어 화면이 떠 있으면 먼저 제어 화면을 닫는 탭으로 본다
+      const overlay = controls.classList.contains('show');
+      const live = overlay ? null : awaiting ?? gates.find((g) => !g.done && g.early !== undefined && frame >= g.early && frame <= g.at);
       if (live?.down?.(e)) {
         gesture = { type: 'gate', id: e.pointerId, gate: live };
         return;
@@ -497,13 +507,10 @@ export default {
         else keepControls();
         return;
       }
-      if (awaiting) {
-        awaiting.tap?.({ target: g.target }); // 고르기·마이크 (다른 곳 탭은 무시)
-        return keepControls();
-      }
-      // 제어 화면이 보일 때 빈 곳 탭 → 숨기기 (유튜브처럼). 숨어 있을 때 탭 → 다음 조각
+      // 제어 화면이 보일 때 빈 곳 탭 → 숨기기 (유튜브처럼). 인터랙션에서 멈춰 있을 때도 마찬가지
       if (controls.classList.contains('show')) return showControls(false);
-      skip();
+      if (awaiting) return awaiting.tap?.({ target: g.target }); // 고르기·마이크 (다른 곳 탭은 무시)
+      skip(); // 숨어 있을 때 탭 → 다음 조각
     });
     land.addEventListener('pointercancel', () => {
       clearTimeout(gesture?.timer);
@@ -562,15 +569,64 @@ export default {
       ask = 'answering';
       land.classList.remove('listening');
       land.classList.add('answering');
-      // 답변은 단어 단위로 출력
-      const words = askData().answer.split(' ');
+      // 말풍선이 다 커진 뒤 답변을 칸에 맞게 나누고, 한 번에 한 칸씩 단어 단위로 출력
+      later(() => {
+        askPages = paginate(askData().answer);
+        typePage(0);
+      }, 900);
+    }
+    // 답변이 답변 칸에 다 안 들어가면 문장 단위로 나눠서 여러 번에 보낸다 (긴 문장은 단어 단위로)
+    function paginate(text) {
+      const plain = text.replace(/^[“"]|[”"]$/g, '');
+      const quote = (t) => `“${t}”`;
+      const lineH = parseFloat(getComputedStyle(reply).lineHeight);
+      const maxH = Math.min(reply.clientHeight, lineH * MAX_LINES);
+      reply.innerHTML = '<span></span>';
+      const probe = reply.firstChild; // 글자 높이만 재는 용도
+      const fits = (t) => {
+        probe.textContent = quote(t);
+        return probe.offsetHeight <= maxH + 1;
+      };
+      const sentences = plain.match(/[^.!?]+[.!?]+\s*|[^.!?]+$/g).map((x) => x.trim());
+      const pages = [];
+      let cur = '';
+      for (const sentence of sentences) {
+        const joined = cur ? `${cur} ${sentence}` : sentence;
+        if (fits(joined)) { cur = joined; continue; }
+        if (cur) pages.push(cur);
+        cur = '';
+        for (const w of sentence.split(' ')) {
+          const t = cur ? `${cur} ${w}` : w;
+          if (cur && !fits(t)) { pages.push(cur); cur = w; } else cur = t;
+        }
+      }
+      if (cur) pages.push(cur);
       reply.textContent = '';
-      words.forEach((w, i) => later(() => { reply.textContent = words.slice(0, i + 1).join(' '); }, 900 + i * 90));
+      return pages.map(quote);
+    }
+    function typePage(n) {
+      askPage = n;
+      const pageNo = el.querySelector('.ask-page');
+      pageNo.textContent = askPages.length > 1 ? `${n + 1} / ${askPages.length}` : '';
+      const words = askPages[n].split(' ');
+      reply.textContent = '';
+      words.forEach((w, i) => later(() => { reply.textContent = words.slice(0, i + 1).join(' '); }, i * 90));
+      // 다음 칸은 다 읽을 시간을 두고 이어서 (탭하면 바로)
+      if (n + 1 < askPages.length) later(() => typePage(n + 1), words.length * 90 + 2600);
+    }
+    // 답변 화면 탭: 남은 답변이 있으면 다음 칸, 없으면 닫기
+    function tapAnswer() {
+      if (askPage + 1 < askPages.length) {
+        askTimers.forEach(clearTimeout);
+        askTimers = [];
+        typePage(askPage + 1);
+      } else closeAsk();
     }
     function closeAsk() {
       askTimers.forEach(clearTimeout);
       askTimers = [];
       ask = 'idle';
+      askPages = [];
       askClosedAt = performance.now();
       land.classList.remove('asking', 'listening', 'answering');
       transcript.classList.remove('show');
@@ -600,7 +656,7 @@ export default {
         loop: false,
         autoplay: false,
         animationData: l.data,
-        rendererSettings: { preserveAspectRatio: 'xMidYMid slice' },
+        rendererSettings: { preserveAspectRatio: 'xMidYMid meet' },
       });
       // 영상 요소가 다 그려진 뒤 인터랙션 연결 → 재생 시작
       const start = () => {

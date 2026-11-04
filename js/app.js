@@ -9,6 +9,7 @@ import lecture from '../screens/lecture/lecture.js';
 import player from '../screens/player/player.js';
 import review from '../screens/review/review.js';
 import teacher from '../screens/teacher/teacher.js';
+import { setTopColor, topColorOf } from './theme.js';
 
 const screens = { onboarding, home, quickcheck, result, library, lecture, player, review, teacher };
 const stage = document.getElementById('stage');
@@ -31,6 +32,7 @@ function go(name, { transition = 'push' } = {}) {
   const el = document.createElement('section');
   el.className = `screen screen-${name}`;
   el.innerHTML = screen.render();
+  setTopColor(topColorOf(name));
 
   const prev = current;
   const t = TRANSITIONS[transition];
