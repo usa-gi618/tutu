@@ -58,17 +58,22 @@ function go(name, { transition = 'push' } = {}) {
   });
 }
 
-// 1분 동안 아무 조작이 없으면 학생 홈 화면으로 (선생님 앱에서도).
-// 홈·시작 화면에서는 그대로 두고, 영상이 재생 중일 때는 보고 있는 것이므로 기다린다.
+// 1분 동안 아무 조작이 없으면 홈으로 (영상 재생 중에도).
+//   선생님 앱(선생님 앱에서 미리 보는 영상 포함) → 선생님 앱 첫 화면, 그 밖 → 학생 홈
 let idleTimer = 0;
 function resetIdle() {
   clearTimeout(idleTimer);
   idleTimer = setTimeout(onIdle, IDLE_MS);
 }
 function onIdle() {
-  const videoPlaying = current.name === 'player' && current.el.querySelector('.toggle')?.dataset.playing === 'true';
-  if (current.name !== 'home' && current.name !== 'onboarding' && !videoPlaying) {
-    state.teacherStep = null;
+  const teacherSide = current.name === 'teacher' || (current.name === 'player' && state.playerBack === 'teacher');
+  if (teacherSide) {
+    const atStart = current.name === 'teacher' && (state.teacherStep ?? 'consent') === 'consent';
+    if (!atStart) {
+      state.teacherStep = 'consent';
+      go('teacher', { transition: 'fade' });
+    }
+  } else if (current.name !== 'home' && current.name !== 'onboarding') {
     state.afterOnboarding = null;
     go('home', { transition: 'fade' });
   }
