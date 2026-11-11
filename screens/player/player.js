@@ -509,7 +509,7 @@ export default {
       }
       // 제어 화면이 보일 때 빈 곳 탭 → 숨기기 (유튜브처럼). 인터랙션에서 멈춰 있을 때도 마찬가지
       if (controls.classList.contains('show')) return showControls(false);
-      if (awaiting) return awaiting.tap?.({ target: g.target }); // 고르기·마이크 (다른 곳 탭은 무시)
+      if (awaiting) return awaiting.tap?.({ target: g.target, clientX: e.clientX, clientY: e.clientY }); // 고르기·마이크 (다른 곳 탭은 무시)
       skip(); // 숨어 있을 때 탭 → 다음 조각
     });
     land.addEventListener('pointercancel', () => {

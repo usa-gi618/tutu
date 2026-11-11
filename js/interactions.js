@@ -176,6 +176,15 @@ const TREE_OFF = { fill: [[C.black, C.grey171], [C.white, C.grey241], [C.green, 
 export function create(it, svg, toSvg, done, lang = () => 'en') {
   const say = (v) => (v && typeof v === 'object' && !Array.isArray(v) ? v[lang()] ?? v.en : v);
   const find = (name) => svg.querySelector(`.${layerClass(it.scene)} .${layerClass(name)}`);
+  // 탭이 레이어에 맞았는지: 도형 위를 눌렀거나, 도형 사이 빈틈(글자 사이 등)이라도 레이어 테두리 상자 안이면 맞은 것으로
+  const hits = (name, e) => {
+    const layer = find(name);
+    if (!layer) return false;
+    if (layer.contains(e.target)) return true;
+    if (e.clientX === undefined) return false;
+    const r = layer.getBoundingClientRect();
+    return r.width > 0 && e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
+  };
   const clearMarks = () => svg.querySelectorAll(`.${layerClass(it.scene)} .tutu-mark`).forEach((m) => m.remove());
 
   // 카드 고르기: 고른 카드에 노란색 + 표시 (예: My prediction)
@@ -184,7 +193,7 @@ export function create(it, svg, toSvg, done, lang = () => 'en') {
       at: it.at,
       choice: null, // 고른 카드 레이어 이름 (Recap에서 사용)
       tap(e) {
-        const name = it.options.find((n) => find(n)?.contains(e.target));
+        const name = it.options.find((n) => find(n)?.contains(e.target)) ?? it.options.find((n) => hits(n, e));
         if (!name) return false;
         api.choice = name;
         clearMarks();
@@ -207,7 +216,7 @@ export function create(it, svg, toSvg, done, lang = () => 'en') {
     return {
       at: it.at,
       tap(e) {
-        const name = it.options.find((n) => find(n)?.contains(e.target));
+        const name = it.options.find((n) => find(n)?.contains(e.target)) ?? it.options.find((n) => hits(n, e));
         if (!name) return false;
         clearMarks();
         if (name !== it.answer) tint(find(name), GREY, 8);
@@ -224,7 +233,7 @@ export function create(it, svg, toSvg, done, lang = () => 'en') {
     return {
       at: it.at,
       tap(e) {
-        if (!find(it.target)?.contains(e.target)) return false;
+        if (!hits(it.target, e)) return false;
         done();
         return true;
       },

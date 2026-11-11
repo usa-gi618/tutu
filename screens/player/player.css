@@ -19,6 +19,9 @@
    왼쪽 = 폰 아래쪽(홈 막대). 영상 배경이 화면 배경과 같은 #f1f1f1이라 여백은 티 나지 않는다 */
 .screen-player .video { position: absolute; inset: 16px 28px 16px 40px; }
 .screen-player .video svg { display: block; }
+/* Lottie는 안 보이는 도형을 opacity="0"으로만 숨긴다 → 그래도 탭을 가로챈다.
+   (예: 역사 06 토론에서 숨어 있는 'mic recording' 레이어가 그 아래 마이크 'answer'를 덮어서 탭이 안 먹힘) */
+.screen-player .video g[opacity="0"] { pointer-events: none; }
 
 /* 스페인어: 영상 속 영어 자막(caption 레이어)을 숨기고 그 자리에 스페인어 자막 */
 .screen-player .lang-es .video g[class*="L-caption-"] { opacity: 0 !important; }
