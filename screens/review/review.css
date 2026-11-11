@@ -174,6 +174,127 @@
 .screen-review .hint.show { visibility: visible; }
 .screen-review .hint i { width: 10px; height: 10px; border-radius: 50%; background: #fffd6c; box-shadow: 0 0 0 1.5px #000; flex: none; }
 
+/* ---- 대수: 양쪽에 계산 끌어다 놓기 → 풀이가 한 줄씩 ---- */
+.screen-review .eq { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; min-height: 0; overflow: hidden; }
+.screen-review .eq-line { font-size: 24px; font-weight: 700; letter-spacing: -0.3px; line-height: 32px; font-variant-numeric: tabular-nums; }
+.screen-review .eq-line.work { font-size: 16px; font-weight: 600; line-height: 22px; color: #8e8e8e; }
+.screen-review .eq-line.final { align-self: flex-start; padding: 0 12px; border-radius: 10px; background: #55df94; }
+.screen-review .op-slot {
+  margin-top: 4px;
+  height: 52px;
+  padding: 0 16px;
+  gap: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #ababab;
+}
+.screen-review .slot.op-slot:not(.empty) { border: 2px dashed #cfcfcf; padding-left: 16px; }
+.screen-review .op-slot.wrong { background: #fffd6c; border-color: #000 !important; color: #000; }
+.screen-review .op-tried { font-size: 20px; font-weight: 700; }
+.screen-review .type-equation .pool { flex-direction: row; flex-wrap: wrap; align-content: flex-start; gap: 12px; }
+.screen-review .block.op {
+  width: 76px;
+  height: 64px;
+  padding: 0;
+  border-radius: 18px;
+  font-size: 24px;
+  line-height: 64px;
+  text-align: center;
+}
+.screen-review .eq-step { font-size: 15px; font-weight: 700; color: #8e8e8e; }
+
+/* ---- 영어: 대사 속 표현에 이름표 ---- */
+.screen-review .quote {
+  margin-top: 12px;
+  padding: 14px 20px;
+  border-radius: 20px;
+  background: #fff;
+  align-self: start;
+}
+.screen-review .quote-text { margin-top: 4px; font-size: 16px; font-weight: 500; line-height: 2.15; }
+.screen-review .slot.phrase {
+  display: inline;
+  height: auto;
+  padding: 4px 4px 4px 6px;
+  border: none;
+  border-radius: 10px;
+  background: #f1f1f1;
+  font-weight: 700;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+.screen-review .slot.phrase u { text-decoration-thickness: 2px; text-underline-offset: 4px; }
+.screen-review .slot.phrase.right { background: #d9f8e7; }
+.screen-review .slot.phrase.wrong { background: #fffd6c; }
+.screen-review .tag-empty {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 10px;
+  border: 1.5px dashed #bdbdbd;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 22px;
+  color: #ababab;
+  vertical-align: 2px;
+}
+.screen-review .block.tag {
+  display: inline-block;
+  height: 26px;
+  margin-left: 6px;
+  padding: 0 10px;
+  border-radius: 13px;
+  background: #000;
+  color: #fff;
+  font-size: 13px;
+  line-height: 26px;
+  vertical-align: 1px;
+  box-shadow: none;
+}
+.screen-review .slot.phrase.right .block.tag { background: #1f9d5b; }
+.screen-review .slot.phrase.wrong .block.tag { background: #000; }
+
+/* ---- 역사: 주장 · 근거 · 반대편에 대한 답 ---- */
+.screen-review .slots.argue { gap: 8px; }
+.screen-review .slots.argue .slot { height: 56px; padding-left: 112px; }
+.screen-review .slots.argue .slot:not(.empty) { padding-left: 112px; }
+.screen-review .arg-label {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 90px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: #8e8e8e;
+}
+.screen-review .type-argue .block {
+  height: auto;
+  min-height: 40px;
+  padding: 5px 12px;
+  font-size: 12.5px;
+  line-height: 1.3;
+  white-space: normal;
+  display: flex;
+  align-items: center;
+}
+.screen-review .slots.argue .block { min-height: 48px; font-size: 13.5px; }
+.screen-review .slot.locked .block { background: #e5e5e5; cursor: default; }
+.screen-review .type-argue .pool {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-content: start;
+  gap: 6px;
+}
+/* 긴 문제 글이 있는 형식은 제목을 조금 작게 해서 아래 버튼 자리를 남긴다 */
+.screen-review .type-argue .prompt h1,
+.screen-review .type-annotate .prompt h1 { font-size: 22px; }
+.screen-review .type-argue .slots,
+.screen-review .type-argue .pool { margin-top: 12px; }
+.screen-review .type-argue .pool-done { grid-column: 1 / 3; }
+.screen-review .type-argue { grid-template-columns: 1fr 1.1fr; }
+
 /* ---- 설명 + 다시 보기 + 비슷한 문제 ---- */
 .screen-review .how {
   position: absolute;
@@ -219,3 +340,28 @@
 .screen-review .done .btns { margin-top: 26px; display: flex; gap: 12px; }
 .screen-review .card.left { height: 100%; max-height: 300px; justify-content: space-between; }
 .screen-review .count { font-size: 120px; font-weight: 700; line-height: 1; letter-spacing: -4px; }
+
+/* 작은 폰(가로로 눕혔을 때 높이가 낮은 화면): 글자·칸을 줄여서 아래 버튼까지 한 화면에 */
+@container (max-width: 400px) {
+  .screen-review .quiz { inset: 66px 28px 14px 40px; column-gap: 24px; }
+  .screen-review .prompt h1,
+  .screen-review .type-argue .prompt h1,
+  .screen-review .type-annotate .prompt h1 { font-size: 18px; }
+  .screen-review .label { font-size: 12px; }
+  .screen-review .btn { height: 42px; padding: 0 22px; font-size: 15px; }
+  .screen-review .quote { margin-top: 8px; padding: 10px 16px; }
+  .screen-review .quote-text { font-size: 14px; line-height: 1.95; }
+  .screen-review .type-annotate .pool { margin-top: 8px; gap: 6px; }
+  .screen-review .type-annotate .pool .block { height: 42px; line-height: 42px; font-size: 14px; }
+  .screen-review .type-argue .slots,
+  .screen-review .type-argue .pool { margin-top: 8px; }
+  .screen-review .slots.argue { gap: 5px; }
+  .screen-review .slots.argue .slot { height: 50px; padding-left: 92px; }
+  .screen-review .slots.argue .slot:not(.empty) { padding-left: 92px; }
+  .screen-review .arg-label { width: 74px; font-size: 11px; }
+  .screen-review .type-argue .block { min-height: 34px; padding: 4px 9px; font-size: 11px; }
+  .screen-review .slots.argue .block { min-height: 44px; font-size: 12px; }
+  .screen-review .type-argue .pool { gap: 5px; }
+  .screen-review .foot { margin-top: 6px; }
+  .screen-review .hint { font-size: 13px; }
+}

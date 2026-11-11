@@ -68,6 +68,7 @@ export const TODAY = [
     review: {
       concept: 'Where a tree’s mass comes from',
       quiz: {
+        type: 'order',
         prompt: 'Put van Helmont’s experiment in order.',
         steps: ['Weigh the dry soil and the sapling', 'Let five years pass, giving only water', 'Weigh the tree and the soil again'],
         pool: [2, 0, 1], // 오른쪽에 처음 놓이는 순서 (섞어서)
@@ -76,6 +77,7 @@ export const TODAY = [
       how: 'Measure first, let time pass, then measure again. Comparing the two weights shows where the mass came from.',
       rewatch: { from: 295, to: 1006, label: 'Rewatch the experiment' }, // 02 무게 재기 ~ 04 다시 재기
       similar: {
+        type: 'order',
         prompt: 'Put the CO₂ experiment in order.',
         steps: ['Seal the plant in a box', 'Take away the carbon dioxide', 'Check how much it grew after 30 days'],
         pool: [1, 2, 0],
@@ -131,6 +133,44 @@ export const TODAY = [
       // 06 확인 문제: 2x − 7 = 9의 첫 단계
       { type: 'answer', scene: '06_check', at: 1071, split: checkOptions(), options: ['option-1', 'option-2', 'option-3'], answer: 'option-1' },
     ],
+    // 수업 후 퀴즈: 저울처럼 양쪽에 같은 계산을 끌어다 놓으며 한 줄씩 풀어 쓰기
+    review: {
+      concept: 'Solving two-step equations',
+      quiz: {
+        type: 'equation',
+        prompt: 'Solve 2x + 7 = 19, one step at a time.',
+        start: '2x + 7 = 19',
+        ops: ['+7', '−7', '×2', '÷2'],
+        steps: [
+          { op: '−7', work: '2x + 7 − 7 = 19 − 7', result: '2x = 12' },
+          { op: '÷2', work: '2x ÷ 2 = 12 ÷ 2', result: 'x = 6' },
+        ],
+        hint: 'Undo the + 7 first, then the 2 that multiplies x.',
+        wrong: {
+          '+7': 'Adding 7 makes it 2x + 14. To undo + 7, subtract.',
+          '×2': 'Multiplying makes x bigger. Undo the + 7 first.',
+          '÷2': 'That works, but makes fractions. Undo the + 7 first.',
+        },
+      },
+      how: 'Undo what was done to x in reverse order: first the + or −, then the × or ÷. Do it to both sides so the balance stays level.',
+      rewatch: { from: 398, to: 1060, label: 'Rewatch solving 3x + 5 = 20' }, // 03 같이 풀기 ~ 05 나누기
+      similar: {
+        type: 'equation',
+        prompt: 'Solve 4x − 3 = 13, one step at a time.',
+        start: '4x − 3 = 13',
+        ops: ['−3', '+3', '÷4', '×4'],
+        steps: [
+          { op: '+3', work: '4x − 3 + 3 = 13 + 3', result: '4x = 16' },
+          { op: '÷4', work: '4x ÷ 4 = 16 ÷ 4', result: 'x = 4' },
+        ],
+        hint: 'To undo − 3, add 3 to both sides first.',
+        wrong: {
+          '−3': 'That makes it 4x − 6. To undo − 3, add.',
+          '÷4': 'Undo the − 3 first, then divide.',
+          '×4': 'Multiplying makes x bigger. Undo the − 3 first.',
+        },
+      },
+    },
     description: 'In today’s class, we learned how to isolate a variable using inverse operations, solve one-step and multi-step equations, and check each answer by substituting it back in.',
     quiz: {
       question: 'What is the first step to solve 3x + 5 = 20?',
@@ -154,6 +194,32 @@ export const TODAY = [
       // 05 확인 문제: 직유(as) 문장 찾기
       { type: 'answer', scene: '05_check', at: 842, split: checkOptions(), options: ['option-1', 'option-2', 'option-3'], answer: 'option-2' },
     ],
+    // 수업 후 퀴즈: 로미오의 대사 속 표현에 이름표 붙이기 (밑줄 친 표현에 끌어다 놓기)
+    review: {
+      concept: 'Metaphor and personification',
+      quiz: {
+        type: 'annotate',
+        prompt: 'Label the two figures of speech in Romeo’s line.',
+        source: 'Romeo · Act 2, Scene 2',
+        text: ['But soft, what light through yonder window breaks? It is the east, and ', { phrase: 'Juliet is the sun' }, '. Arise, fair sun, and kill ', { phrase: 'the envious moon' }, '.'],
+        cards: ['Metaphor', 'Personification', 'Simile'],
+        pool: [2, 1, 0],
+        answer: [0, 1],
+        hint: 'A simile needs “like” or “as”. Does Romeo say “like”?',
+      },
+      how: 'Romeo says Juliet is the sun, with no “like” or “as”, so it’s a metaphor. Calling the moon envious gives it human feelings: personification.',
+      rewatch: { from: 413, to: 835, label: 'Rewatch metaphor & personification' }, // 03 메타포 ~ 04 의인화
+      similar: {
+        type: 'annotate',
+        prompt: 'Label the figures of speech in this new line.',
+        source: 'Practice line',
+        text: ['', { phrase: 'The night is a black cloak' }, ', and ', { phrase: 'the stars wink' }, ' at the two lovers.'],
+        cards: ['Simile', 'Metaphor', 'Personification'],
+        pool: [2, 0, 1],
+        answer: [1, 2],
+        hint: 'Can stars really wink? Is the night really a cloak?',
+      },
+    },
     description: 'In today’s class, we learned how Shakespeare uses metaphor and imagery, such as “Juliet is the sun,” to show what characters feel and to build the play’s central themes.',
     quiz: {
       question: 'In “Juliet is the sun,” what is Romeo saying about Juliet?',
@@ -179,6 +245,35 @@ export const TODAY = [
       // 07 정리: 내 편 고르기
       { type: 'pick', scene: '07_recap', at: 2005, options: ['blessing', 'root'], badge: { en: 'My side', es: 'Mi postura' }, badgeAt: 'top-right' },
     ],
+    // 수업 후 퀴즈: 토론처럼 주장 + 근거 + 반대편에 대한 답을 카드로 짜 맞추기
+    review: {
+      concept: 'Building an argument with evidence',
+      quiz: {
+        type: 'argue',
+        prompt: 'Was the Industrial Revolution a blessing? Build your argument.',
+        slots: ['Claim', 'Evidence', 'Answer the other side'],
+        // side: 'B' = 축복, 'R' = 불평등·오염의 뿌리. role: claim / evidence / counter
+        cards: [
+          { text: 'It was a blessing.', role: 'claim', side: 'B' },
+          { text: 'It was the root of inequality and pollution.', role: 'claim', side: 'R' },
+          { text: 'Cloth got cheap, so more people had clothes.', role: 'evidence', side: 'B' },
+          { text: 'Railways moved goods and people fast.', role: 'evidence', side: 'B' },
+          { text: 'Children worked 16-hour days (Crabtree, 1832).', role: 'evidence', side: 'R' },
+          { text: 'Factory smoke turned city skies black.', role: 'evidence', side: 'R' },
+          { text: 'Child labor was a law problem, and laws can change.', role: 'counter', side: 'B' },
+          { text: 'Cheap cloth was built on children’s long hours.', role: 'counter', side: 'R' },
+        ],
+        pool: [4, 0, 7, 2, 5, 1, 3, 6],
+        hint: 'Your evidence must back your own claim. Your answer must reply to the other side’s point.',
+      },
+      how: 'A strong argument picks one side, backs it with evidence for that side, and answers the best point from the other side.',
+      rewatch: { from: 806, to: 1340, label: 'Rewatch the two documentaries' }, // 04 · 05 다큐
+      similar: {
+        type: 'argue',
+        flip: true, // 앞에서 고른 편의 반대편으로 주장이 고정된다
+        prompt: 'Now argue the other side.',
+      },
+    },
     // 04·05 다큐멘터리: 글자 카드 대신 일러스트 컷 (from = 이 프레임부터, 내레이션 마커에 맞춤. pan = 컷 동안 이동 방향)
     docs: [
       {

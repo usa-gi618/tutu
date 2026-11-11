@@ -1,5 +1,5 @@
 // 영상이 끝난 뒤 복습 문제 (가로). 앱 디자인(강의 화면·Recap·종료 화면)에 맞춰 와이어프레임을 다시 구성.
-//   quiz    : 오른쪽 블록(실험 단계)을 왼쪽 빈칸 3개에 끌어다 넣어 순서 맞추기 (탭하면 다음 빈칸으로)
+//   quiz    : 과목마다 수업 방식에 맞춘 형식 (아래 '문제' 참고). 오른쪽 카드를 왼쪽 칸에 끌어다 놓는다 (탭하면 다음 빈칸으로)
 //             틀리면 틀린 칸 노랑 + 힌트 → 다시 풀기. 두 번째도 틀리면 how로
 //   how     : 설명 + 영상 다시 보기(rewatch) + 비슷한 문제(영상을 다시 봐야 열림)
 //   similar : 비슷한 문제. 맞히면 done
@@ -41,57 +41,154 @@ export default {
 
     el.querySelector('.close').addEventListener('click', () => go('home', { transition: 'pop' }));
 
-    // ---------- 순서 맞추기 ----------
-    let slots = [];   // 빈칸마다 들어간 블록 번호 (없으면 null)
+    // ---------- 문제 (과목마다 수업 방식에 맞춘 형식) ----------
+    //   order    : 블록을 빈칸에 순서대로 (생물: 실험 순서)
+    //   equation : 양쪽에 할 계산을 끌어다 놓으면 풀이가 한 줄씩 써진다 (대수: 저울처럼 양쪽에 같은 계산)
+    //   annotate : 대사 속 밑줄 친 표현에 이름표 붙이기 (영어: 표현 읽기)
+    //   argue    : 주장 + 근거 + 반대편에 대한 답을 카드로 짜 맞추기 (역사: 토론)
+    let slots = [];   // 빈칸마다 들어간 카드 번호 (없으면 null)
     let marks = [];   // 채점 후 칸 표시: 'right' | 'wrong' | null
+    let locked = new Set(); // 처음부터 채워져 있어 못 바꾸는 칸
     let q = null;     // 지금 문제 (quiz | similar)
     let showHint = false;
+    let hintText = '';
+    let lines = [];   // equation: 지금까지 쓴 풀이 줄
+    let solved = 0;   // equation: 맞게 한 단계 수
+
+    const LABELS = {
+      order: 'Not graded · put in order',
+      equation: 'Not graded · solve step by step',
+      annotate: 'Not graded · label the line',
+      argue: 'Not graded · build your argument',
+    };
+
+    // 비슷한 문제(argue flip): 앞 문제와 같은 카드로, 주장만 반대편으로 고정
+    function resolve(problem) {
+      if (problem.type !== 'argue' || !problem.flip) return problem;
+      return { ...data.quiz, ...problem, pool: data.quiz.pool };
+    }
 
     function startQuiz(problem) {
-      q = problem;
-      slots = q.steps.map(() => null);
+      q = resolve(problem);
       marks = [];
+      locked = new Set();
       showHint = false;
+      hintText = q.hint;
+      if (q.type === 'equation') {
+        slots = [null];
+        lines = [{ text: q.start }];
+        solved = 0;
+      } else if (q.type === 'annotate') {
+        slots = q.text.filter((t) => typeof t === 'object').map(() => null);
+      } else if (q.type === 'argue') {
+        slots = q.slots.map(() => null);
+        if (q.flip) {
+          const other = R.side === 'R' ? 'B' : 'R';
+          slots[0] = q.cards.findIndex((c) => c.role === 'claim' && c.side === other);
+          locked.add(0);
+        }
+      } else {
+        slots = q.steps.map(() => null);
+      }
       drawQuiz();
     }
 
-    const pool = () => q.pool.filter((b) => !slots.includes(b));
+    const cardText = (b) => (q.cards ? q.cards[b].text ?? q.cards[b] : q.steps[b]);
+    const pool = () => (q.type === 'equation' ? q.ops.map((_, i) => i) : q.pool.filter((b) => !slots.includes(b)));
     const full = () => slots.every((s) => s !== null);
+    const slotClass = (i) => `${slots[i] === null ? 'empty' : ''} ${marks[i] ?? (locked.has(i) ? 'right locked' : '')}`;
+    const block = (b, extra = '') => `<div class="block ${extra}" data-block="${b}">${cardText(b)}</div>`;
+
+    function workHtml() {
+      if (q.type === 'equation') {
+        const done = solved === q.steps.length;
+        return `
+          <div class="eq">
+            ${lines.map((l) => `<p class="eq-line ${l.kind ?? ''}">${l.text}</p>`).join('')}
+            ${done ? '' : `
+              <div class="slot op-slot ${slotClass(0)}" data-slot="0">
+                ${marks[0] === 'wrong' ? `<span class="op-tried">${q.ops[slots[0]]}</span>` : ''}
+                <span>Drop what to do to both sides</span>
+              </div>`}
+          </div>`;
+      }
+      if (q.type === 'annotate') {
+        let n = -1;
+        const parts = q.text.map((t) => {
+          if (typeof t === 'string') return t;
+          n += 1;
+          const b = slots[n];
+          return `<span class="slot phrase ${slotClass(n)}" data-slot="${n}"><u>${t.phrase}</u>${b === null ? '<span class="tag-empty">label</span>' : block(b, 'tag')}</span>`;
+        });
+        return `<div class="quote"><p class="label">${q.source}</p><p class="quote-text">${parts.join('')}</p></div>`;
+      }
+      if (q.type === 'argue') {
+        return `
+          <ol class="slots argue">
+            ${slots.map((b, i) => `
+              <li class="slot ${slotClass(i)}" data-slot="${i}">
+                <span class="arg-label">${q.slots[i]}</span>
+                ${b === null ? '' : block(b)}
+              </li>`).join('')}
+          </ol>`;
+      }
+      return `
+        <ol class="slots">
+          ${slots.map((b, i) => `
+            <li class="slot ${slotClass(i)}" data-slot="${i}">
+              <span class="num">${i + 1}</span>
+              ${b === null ? '' : block(b)}
+            </li>`).join('')}
+        </ol>`;
+    }
 
     function drawQuiz() {
-      const similar = q === data.similar;
+      const similar = q.prompt === data.similar.prompt;
       crumb.textContent = `${lecture.subject} · ${similar ? 'One more like it' : 'Check'}`;
       const checked = marks.length > 0;
       const wrong = marks.includes('wrong');
+      const left = pool();
+      let button = '';
+      if (q.type === 'equation') {
+        button = `<p class="eq-step">Step ${Math.min(solved + 1, q.steps.length)} of ${q.steps.length}</p>`;
+      } else if (checked && wrong) {
+        button = '<button class="btn dark" type="button" data-act="retry">Try again</button>';
+      } else {
+        button = `<button class="btn dark" type="button" data-act="check" ${full() ? '' : 'disabled'}>Check</button>`;
+      }
       view.innerHTML = `
-        <div class="quiz">
+        <div class="quiz type-${q.type}">
           <div class="prompt">
-            <p class="label">Not graded · put in order</p>
+            <p class="label">${LABELS[q.type]}</p>
             <h1>${q.prompt}</h1>
           </div>
-          <ol class="slots">
-            ${slots.map((b, i) => `
-              <li class="slot ${b === null ? 'empty' : ''} ${marks[i] ?? ''}" data-slot="${i}">
-                <span class="num">${i + 1}</span>
-                ${b === null ? '' : `<div class="block" data-block="${b}">${q.steps[b]}</div>`}
-              </li>`).join('')}
-          </ol>
+          ${workHtml()}
           <div class="pool">
-            ${pool().map((b) => `<div class="block" data-block="${b}">${q.steps[b]}</div>`).join('')}
-            ${pool().length ? '' : '<p class="pool-done">All steps placed</p>'}
+            ${left.map((b) => (q.type === 'equation' ? `<div class="block op" data-block="${b}">${q.ops[b]}</div>` : block(b))).join('')}
+            ${left.length ? '' : '<p class="pool-done">All cards placed</p>'}
           </div>
           <div class="foot">
-            <p class="hint ${showHint ? 'show' : ''}"><i></i>Hint: ${q.hint}</p>
-            ${checked && wrong
-              ? '<button class="btn dark" type="button" data-act="retry">Try again</button>'
-              : `<button class="btn dark" type="button" data-act="check" ${full() ? '' : 'disabled'}>Check</button>`}
+            <p class="hint ${showHint ? 'show' : ''}"><i></i>Hint: ${hintText}</p>
+            ${button}
           </div>
         </div>`;
     }
 
-    function check() {
-      marks = slots.map((b, i) => (b === i ? 'right' : 'wrong'));
-      const ok = !marks.includes('wrong');
+    // 채점: 칸마다 'right' | 'wrong'
+    function grade() {
+      if (q.type === 'annotate') return slots.map((b, i) => (b === q.answer[i] ? 'right' : 'wrong'));
+      if (q.type === 'argue') {
+        const claim = q.cards[slots[0]];
+        const side = claim.role === 'claim' ? claim.side : null;
+        if (side) R.side = side;
+        const fits = (b, role) => q.cards[b].role === role && q.cards[b].side === side;
+        return [side ? 'right' : 'wrong', fits(slots[1], 'evidence') ? 'right' : 'wrong', fits(slots[2], 'counter') ? 'right' : 'wrong'];
+      }
+      return slots.map((b, i) => (b === i ? 'right' : 'wrong'));
+    }
+
+    // 맞으면 마무리, 틀리면 힌트 (첫 문제에서 두 번 틀리면 설명 화면으로)
+    function afterCheck(ok) {
       if (ok) {
         drawQuiz();
         setTimeout(() => {
@@ -101,35 +198,63 @@ export default {
         return;
       }
       R.tries += 1;
-      if (q === data.quiz && R.tries >= 2) {
+      if (q.prompt === data.quiz.prompt && R.tries >= 2) {
         drawQuiz();
         setTimeout(() => {
           R.stage = 'how';
           drawStage();
-        }, 900);
+        }, 1200);
         return;
       }
       showHint = true;
       drawQuiz();
     }
 
-    // 다시 풀기: 맞은 칸은 그대로, 틀린 블록은 오른쪽으로
+    function check() {
+      marks = grade();
+      afterCheck(!marks.includes('wrong'));
+    }
+
+    // equation: 양쪽에 계산 하나 하기
+    function applyOp(b) {
+      const step = q.steps[solved];
+      if (q.ops[b] !== step.op) {
+        slots = [b];
+        marks = ['wrong'];
+        hintText = q.wrong?.[q.ops[b]] ?? q.hint;
+        return afterCheck(false);
+      }
+      slots = [null];
+      marks = [];
+      showHint = false;
+      lines.push({ text: step.work, kind: 'work' }, { text: step.result, kind: 'result' });
+      solved += 1;
+      if (solved === q.steps.length) {
+        lines[lines.length - 1].kind = 'result final';
+        return afterCheck(true);
+      }
+      drawQuiz();
+    }
+
+    // 다시 풀기: 맞은 칸은 그대로, 틀린 카드는 오른쪽으로
     function retry() {
-      slots = slots.map((b, i) => (marks[i] === 'right' ? b : null));
+      slots = slots.map((b, i) => (marks[i] === 'right' || locked.has(i) ? b : null));
       marks = [];
       drawQuiz();
     }
 
-    // 블록 놓기 (to: 빈칸 번호 또는 null = 오른쪽으로)
-    function place(block, to) {
-      const from = slots.indexOf(block);
+    // 카드 놓기 (to: 빈칸 번호 또는 null = 오른쪽으로)
+    function place(card, to) {
+      if (q.type === 'equation') return to === null ? drawQuiz() : applyOp(card);
+      if (to !== null && locked.has(to)) return drawQuiz();
+      const from = slots.indexOf(card);
       if (to === null) {
         if (from !== -1) slots[from] = null;
       } else {
         const occupant = slots[to];
         if (from !== -1) slots[from] = occupant; // 칸끼리 바꾸기
         else if (occupant !== null) slots[to] = null;
-        slots[to] = block;
+        slots[to] = card;
       }
       marks = [];
       drawQuiz();
@@ -164,8 +289,8 @@ export default {
       const d = drag;
       drag = null;
       if (!d.moved) {
-        // 탭: 오른쪽 블록 → 첫 빈칸, 칸에 있는 블록 → 오른쪽으로
-        const inSlot = slots.includes(d.block);
+        // 탭: 오른쪽 카드 → 첫 빈칸, 칸에 있는 카드 → 오른쪽으로
+        const inSlot = q.type !== 'equation' && slots.includes(d.block);
         return place(d.block, inSlot ? null : slots.indexOf(null));
       }
       // 손을 뗀 곳의 빈칸 찾기
