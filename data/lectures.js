@@ -179,6 +179,28 @@ export const TODAY = [
       // 07 정리: 내 편 고르기
       { type: 'pick', scene: '07_recap', at: 2005, options: ['blessing', 'root'], badge: { en: 'My side', es: 'Mi postura' }, badgeAt: 'top-right' },
     ],
+    // 04·05 다큐멘터리: 글자 카드 대신 일러스트 컷 (from = 이 프레임부터, 내레이션 마커에 맞춤. pan = 컷 동안 이동 방향)
+    docs: [
+      {
+        scene: '04_doc1_blessing',
+        hide: ['text', 'cloth', 'railways'],
+        cuts: [
+          { from: 806, art: 'assets/docs/mill.svg', pan: [-30, 6], label: { en: 'A Lancashire cotton mill · 1830s', es: 'Una fábrica de algodón en Lancashire · década de 1830' } },
+          { from: 915, art: 'assets/docs/cloth.svg', pan: [24, 0], label: { en: 'Machine-made cloth got cheap', es: 'La tela hecha a máquina se abarató' } },
+          { from: 985, art: 'assets/docs/railway.svg', pan: [-36, 0], label: { en: 'Liverpool–Manchester Railway · 1830', es: 'Ferrocarril Liverpool–Mánchester · 1830' } },
+        ],
+      },
+      {
+        scene: '05_doc2_root_cause',
+        hide: ['text', 'owners', 'children', 'cities'],
+        cuts: [
+          { from: 1035, art: 'assets/docs/manchester.svg', pan: [30, 4], label: { en: 'Manchester · 1840s', es: 'Mánchester · década de 1840' } },
+          { from: 1138, art: 'assets/docs/owners.svg', pan: [-24, 0], label: { en: 'Mill owners grew rich', es: 'Los dueños de las fábricas se enriquecieron' } },
+          { from: 1190, art: 'assets/docs/children.svg', pan: [20, -6], label: { en: 'Child workers · 5 a.m. to 9 p.m.', es: 'Niños trabajadores · de 5 a. m. a 9 p. m.' } },
+          { from: 1241, art: 'assets/docs/smoke.svg', pan: [0, -12], label: { en: 'Smoke over the city', es: 'Humo sobre la ciudad' } },
+        ],
+      },
+    ],
     description: 'In today’s class, we learned how machines and factories changed Britain, and debated whether the Industrial Revolution was a blessing or a root cause of inequality and pollution.',
     quiz: {
       question: 'Where did the Industrial Revolution begin?',

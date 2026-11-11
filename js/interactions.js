@@ -12,7 +12,7 @@ const GREY = '#D9D9D9';
 
 export const layerClass = (name) => `L-${String(name).replace(/[^a-zA-Z0-9_-]/g, '-')}`;
 
-function sceneLayers(data, scene) {
+export function sceneLayers(data, scene) {
   const top = data.layers.find((l) => l.nm === scene);
   if (!top) throw new Error(`Lottie scene not found: ${scene}`);
   return data.assets.find((a) => a.id === top.refId).layers;

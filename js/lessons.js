@@ -1,13 +1,17 @@
 // 강의 영상(Lottie) 미리 불러오기 + 조각(segment) 정보 만들기.
 // 같은 파일은 한 번만 받는다 (강의 시작 화면에서 미리 받아 두면 플레이어에서 바로 재생).
 import { prepare } from './interactions.js';
+import { prepareDocs } from './documentary.js';
 
 const cache = new Map();
 
 export function loadLesson(lecture) {
   const url = lecture.motion;
   if (!cache.has(url)) {
-    cache.set(url, fetch(url).then((r) => r.json()).then((data) => parse(prepare(data, lecture.interactions))));
+    cache.set(url, fetch(url).then((r) => r.json()).then((data) => {
+      prepareDocs(data, lecture.docs);
+      return parse(prepare(data, lecture.interactions));
+    }));
   }
   return cache.get(url);
 }

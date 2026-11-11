@@ -16,6 +16,7 @@ import { TODAY } from '../../data/lectures.js';
 import { state } from '../../js/state.js';
 import { loadLesson } from '../../js/lessons.js';
 import { create as createInteraction } from '../../js/interactions.js';
+import { createDoc } from '../../js/documentary.js';
 import { UI, ES } from '../../data/spanish.js';
 
 const SWIPE_PX = 40;
@@ -213,6 +214,7 @@ export default {
     let raf = 0;
     let disposed = false;
     let gates = [];            // 영상 속 인터랙션 (at 프레임 순)
+    let docs = [];             // 영상 속 다큐멘터리 화면 (일러스트 컷)
     let awaiting = null;       // 지금 조작을 기다리는 인터랙션
     let hideTimer = 0;
 
@@ -409,6 +411,7 @@ export default {
         g.dot.style.left = `${barX(g.at)}px`;
         g.onFrame?.(frame);
       });
+      docs.forEach((d) => d.onFrame(frame));
       if (toggleBtn.dataset.playing !== String(playing)) {
         toggleBtn.dataset.playing = playing;
         toggleBtn.innerHTML = playing ? ICON_PAUSE : ICON_PLAY;
@@ -673,6 +676,7 @@ export default {
             return g;
           })
           .sort((a, b) => a.at - b.at);
+        docs = (lecture.docs ?? []).map((d) => createDoc(d, svg, lesson.data, () => (isEs() ? 'es' : 'en')));
         applyLang();
         raf = requestAnimationFrame(tick);
         play(state.rewatch?.from ?? 0);
