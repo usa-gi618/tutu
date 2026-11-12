@@ -33,6 +33,7 @@ const ICON = {
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const CLASS_SEC = 50 * 60; // 녹음이 끝난 뒤에는 실제 녹음 시간과 상관없이 한 교시(50:00)로 보여준다
 const mmss = (sec) => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
 
 const bars = (n) => Array.from({ length: n }, (_, i) => `<i style="animation-delay:${(i * 0.09).toFixed(2)}s"></i>`).join('');
@@ -86,7 +87,7 @@ const VIEWS = {
     <h1>Building<br />the lecture</h1>
     <div class="glow yellow">
       <span class="glow-check">${ICON.check}</span>
-      <p class="clock">${mmss(state.recordSec ?? 0)}</p>
+      <p class="clock">${mmss(CLASS_SEC)}</p>
     </div>
     <ul class="dots">
       <li>What you repeated</li>
@@ -192,7 +193,7 @@ export default {
     function enter(name) {
       if (name === 'notify') later(() => view.querySelector('.lock-note')?.classList.add('in'), 500);
       if (name === 'record') {
-        // 녹음 시간이 0초부터 실제로 흘러간다 (끝나면 '강의 만드는 중'에 이 시간이 나온다)
+        // 녹음 시간이 0초부터 실제로 흘러간다 (끝난 뒤 '강의 만드는 중'에는 항상 50:00)
         state.recordSec = 0;
         const clock = view.querySelector('[data-clock]');
         timers.push(setInterval(() => {
