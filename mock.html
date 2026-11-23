@@ -132,7 +132,10 @@
         screen.style.setProperty('--top', color);
         screen.style.setProperty('--ink', dark(color) ? '#fff' : '#000');
       }
-      const isLand = LAND.includes(doc.documentElement.dataset.screen);
+      // 지금 화면 이름: 앱이 남긴 표시, 없으면(예전 앱 파일이 캐시된 경우) 맨 위 화면의 클래스로 판단
+      const top = [...doc.querySelectorAll('#stage > .screen')].pop();
+      const name = doc.documentElement.dataset.screen || top?.className.match(/screen-(\w+)/)?.[1];
+      const isLand = LAND.includes(name);
       if (isLand !== land) { land = isLand; layout(); }
     }, 150);
   </script>
