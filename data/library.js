@@ -9,15 +9,15 @@ import { TODAY } from './lectures.js';
 export const SUBJECTS = ['Algebra', 'English 9', 'Biology', 'History'];
 
 export const PAST = [
-  { subject: 'Biology', title: 'Cells and Their Parts', period: 'Period 4 : 30', date: '2026-09-21', status: 'watched' },
-  { subject: 'Biology', title: 'How Plants Make Food', period: 'Period 4 : 30', date: '2026-10-08', status: 'passed' },
-  { subject: 'Biology', title: 'Food Chains and Webs', period: 'Period 4 : 30', date: '2026-10-27', status: 'todo' },
-  { subject: 'Algebra', title: 'Variables and Expressions', period: 'Period 4 : 30', date: '2026-09-24', status: 'watched' },
-  { subject: 'Algebra', title: 'Order of Operations', period: 'Period 4 : 30', date: '2026-10-15', status: 'passed' },
-  { subject: 'English 9', title: 'Elements of a Short Story', period: 'Period 4 : 30', date: '2026-09-30', status: 'passed' },
-  { subject: 'English 9', title: 'Introducing Shakespeare', period: 'Period 4 : 30', date: '2026-10-21', status: 'watched' },
-  { subject: 'History', title: 'Native American Cultures', period: 'Period 4 : 30', date: '2026-09-17', status: 'watched' },
-  { subject: 'History', title: 'The Age of Exploration', period: 'Period 4 : 30', date: '2026-10-10', status: 'todo' },
+  { subject: 'Biology', title: 'Cells and Their Parts', period: 'Period 0 : 56', date: '2026-09-21', status: 'watched' },
+  { subject: 'Biology', title: 'How Plants Make Food', period: 'Period 0 : 56', date: '2026-10-08', status: 'passed' },
+  { subject: 'Biology', title: 'Food Chains and Webs', period: 'Period 0 : 56', date: '2026-10-27', status: 'todo' },
+  { subject: 'Algebra', title: 'Variables and Expressions', period: 'Period 0 : 38', date: '2026-09-24', status: 'watched' },
+  { subject: 'Algebra', title: 'Order of Operations', period: 'Period 0 : 38', date: '2026-10-15', status: 'passed' },
+  { subject: 'English 9', title: 'Elements of a Short Story', period: 'Period 0 : 30', date: '2026-09-30', status: 'passed' },
+  { subject: 'English 9', title: 'Introducing Shakespeare', period: 'Period 0 : 30', date: '2026-10-21', status: 'watched' },
+  { subject: 'History', title: 'Native American Cultures', period: 'Period 1 : 08', date: '2026-09-17', status: 'watched' },
+  { subject: 'History', title: 'The Age of Exploration', period: 'Period 1 : 08', date: '2026-10-10', status: 'todo' },
 ];
 
 const isoToday = () => {

@@ -18,6 +18,7 @@ import { loadLesson } from '../../js/lessons.js';
 import { create as createInteraction } from '../../js/interactions.js';
 import { createDoc } from '../../js/documentary.js';
 import { UI, ES } from '../../data/spanish.js';
+import { setTopColor, topColorOf } from '../../js/theme.js';
 
 const SWIPE_PX = 40;
 const HOLD_MS = 400;  // 길게 누르기로 보는 시간
@@ -142,6 +143,13 @@ export default {
     const lecture = TODAY[index];
     const land = el.querySelector('.land');
     const controls = el.querySelector('.controls');
+    // 제어 화면 그림자·질문하기 어둡게가 깔리면 상태바 자리도 같은 만큼 어둡게 (#f1f1f1 위에 검정 40% / 30%)
+    const topShade = new MutationObserver(() => {
+      if (disposed) return;
+      setTopColor(controls.classList.contains('show') ? '#919191' : land.classList.contains('asking') ? '#a9a9a9' : topColorOf('player'));
+    });
+    topShade.observe(controls, { attributes: true, attributeFilter: ['class'] });
+    topShade.observe(land, { attributes: true, attributeFilter: ['class'] });
     const bar = el.querySelector('.bar');
     const head = el.querySelector('.head');
     const progress = el.querySelector('.progress');
@@ -448,8 +456,10 @@ export default {
         if (ask === 'answering') tapAnswer();
         return;
       }
-      land.setPointerCapture(e.pointerId);
       clearTimeout(hideTimer); // 만지는 동안은 숨기지 않는다
+      // 버튼은 click으로 처리. 포인터를 붙잡으면(capture) click이 버튼 대신 화면에 가서 버튼이 안 눌린다
+      if (controls.classList.contains('show') && e.target.closest('button')) return;
+      land.setPointerCapture(e.pointerId);
 
       if (controls.classList.contains('show') && e.target.closest('.progress')) {
         gesture = { type: 'seek', id: e.pointerId, wasPlaying: playing };
@@ -687,6 +697,7 @@ export default {
 
     return () => {
       disposed = true;
+      topShade.disconnect();
       cancelAnimationFrame(raf);
       clearTimeout(hideTimer);
       askTimers.forEach(clearTimeout);

@@ -16,5 +16,8 @@ const meta = document.querySelector('meta[name="theme-color"]');
 export function setTopColor(color) {
   meta.setAttribute('content', color);
   document.documentElement.style.background = color; // 브라우저에서 화면 위로 끌어당겼을 때도 같은 색
+  // 상태바 밑까지 깔리지 않는 화면(가로 화면)은 상태바 자리에 무대 배경이 보인다 → 같은 색으로
+  const stage = document.getElementById('stage');
+  if (stage) stage.style.background = color;
 }
 export const topColorOf = (screen) => TOP[screen] ?? '#ffffff';

@@ -27,6 +27,7 @@ img { -webkit-user-drag: none; }
   inset: 0;
   overflow: hidden;
   background: #fff;
+  transition: background-color 0.3s ease; /* 영상 제어 화면 그림자와 함께 상태바 자리도 어두워진다 */
 }
 
 /*
