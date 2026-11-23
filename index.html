@@ -12,6 +12,12 @@
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png" />
   <link rel="icon" type="image/png" href="assets/app-icon-192.png" />
   <title>tutu</title>
+  <script>
+    // 컴퓨터(마우스)로 열면 화면 전체로 늘어나지 않게 아이폰 목업 페이지로 보낸다 (목업 안의 앱은 iframe이라 그대로)
+    if (window.top === window && matchMedia('(hover: hover) and (pointer: fine)').matches && !/[?&]app\b/.test(location.search)) {
+      location.replace('mock.html');
+    }
+  </script>
   <link rel="stylesheet" href="css/base.css" />
   <link rel="stylesheet" href="screens/onboarding/onboarding.css" />
   <link rel="stylesheet" href="screens/home/home.css" />

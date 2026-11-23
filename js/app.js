@@ -35,6 +35,7 @@ function go(name, { transition = 'push' } = {}) {
   el.className = `screen screen-${name}`;
   el.innerHTML = screen.render();
   setTopColor(topColorOf(name));
+  document.documentElement.dataset.screen = name; // 컴퓨터용 폰 목업(mock.html)이 가로 화면일 때 폰을 눕힌다
 
   const prev = current;
   const t = TRANSITIONS[transition];

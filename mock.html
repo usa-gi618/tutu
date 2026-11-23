@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>tutu</title>
+  <link rel="icon" type="image/png" href="assets/app-icon-192.png" />
+  <script>
+    // 폰·태블릿(터치)으로 열면 목업 없이 앱 그대로
+    if (!matchMedia('(hover: hover) and (pointer: fine)').matches) location.replace('./');
+  </script>
+  <style>
+    /* 컴퓨터용: 흰 배경 + 투투 로고(20%) 위에 iPhone 14 Plus 목업, 그 안에서 앱이 돈다 */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow: hidden; background: #fff; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro", "Helvetica Neue", Arial, sans-serif; }
+
+    .logo {
+      position: fixed; left: 50%; top: 50%;
+      width: min(86vw, 1400px); transform: translate(-50%, -50%);
+      opacity: 0.2; pointer-events: none; user-select: none;
+    }
+
+    /* 폰 크기: 화면 428 x 926 + 테두리 */
+    .phone {
+      --bezel: 16px;
+      position: fixed; left: 50%; top: 50%;
+      width: calc(428px + var(--bezel) * 2);
+      height: calc(926px + var(--bezel) * 2);
+      margin-left: calc(-214px - var(--bezel));
+      margin-top: calc(-463px - var(--bezel));
+      padding: var(--bezel);
+      border-radius: 70px;
+      background: #111;
+      box-shadow: 0 0 0 2px #3a3a3c, 0 40px 90px rgba(0, 0, 0, 0.25), 0 8px 24px rgba(0, 0, 0, 0.12);
+      transform: scale(var(--s, 1)) rotate(var(--r, 0deg));
+      transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    /* 옆 버튼 */
+    .phone::before, .phone::after {
+      content: ''; position: absolute; width: 4px; border-radius: 2px; background: #2c2c2e;
+    }
+    .phone::before { left: -5px; top: 190px; height: 64px; box-shadow: 0 84px 0 #2c2c2e; }
+    .phone::after { right: -5px; top: 260px; height: 100px; }
+
+    .screen {
+      position: relative; width: 428px; height: 926px;
+      border-radius: 54px; overflow: hidden; background: var(--top, #fff);
+      transition: background 0.3s;
+    }
+    /* 상태바 (47pt): 앱의 theme-color로 칠한다 */
+    .status {
+      position: absolute; left: 0; right: 0; top: 0; height: 47px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 4px 30px 0 46px;
+      color: var(--ink, #000); font-size: 17px; font-weight: 600; letter-spacing: -0.2px;
+      pointer-events: none; z-index: 2;
+    }
+    .status .icons { display: flex; gap: 6px; align-items: center; }
+    .status svg { display: block; fill: currentColor; }
+    .island {
+      position: absolute; left: 50%; top: 11px; width: 124px; height: 36px;
+      margin-left: -62px; border-radius: 20px; background: #000; z-index: 3;
+    }
+    iframe {
+      position: absolute; left: 0; top: 47px; width: 428px; height: 879px;
+      border: 0; display: block; background: #fff;
+    }
+    /* 홈 인디케이터 */
+    .home-bar {
+      position: absolute; left: 50%; bottom: 8px; width: 140px; height: 5px; margin-left: -70px;
+      border-radius: 3px; background: #000; opacity: 0.85; pointer-events: none; z-index: 2;
+    }
+  </style>
+</head>
+<body>
+  <img class="logo" src="assets/logo-tutu.svg" alt="" />
+  <div class="phone" id="phone">
+    <div class="screen" id="screen">
+      <div class="status">
+        <span id="clock">9:41</span>
+        <span class="icons">
+          <svg width="18" height="12" viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.5" width="3" height="6.5" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>
+          <svg width="16" height="12" viewBox="0 0 16 12"><path d="M8 2.6c2.3 0 4.4.9 6 2.4l1.2-1.2A10.2 10.2 0 0 0 8 .9 10.2 10.2 0 0 0 .8 3.8L2 5c1.6-1.5 3.7-2.4 6-2.4Zm0 3.3c1.4 0 2.7.5 3.6 1.4l1.2-1.2A7 7 0 0 0 8 4.2a7 7 0 0 0-4.8 1.9l1.2 1.2c1-.9 2.2-1.4 3.6-1.4Zm0 3.3c-.6 0-1.1.2-1.4.6L8 11.2l1.4-1.4c-.3-.4-.8-.6-1.4-.6Z"/></svg>
+          <svg width="27" height="13" viewBox="0 0 27 13"><rect x="0.5" y="0.5" width="23" height="12" rx="3.5" fill="none" stroke="currentColor" opacity="0.4"/><rect x="2" y="2" width="20" height="9" rx="2"/><path d="M25 4.5v4c.8-.3 1.3-1.1 1.3-2s-.5-1.7-1.3-2Z" opacity="0.4"/></svg>
+        </span>
+      </div>
+      <div class="island"></div>
+      <iframe id="app" src="index.html?app" title="tutu" allow="autoplay"></iframe>
+      <div class="home-bar" id="homeBar"></div>
+    </div>
+  </div>
+
+  <script>
+    const phone = document.getElementById('phone');
+    const screen = document.getElementById('screen');
+    const frame = document.getElementById('app');
+    const LAND = ['lecture', 'player', 'review']; // 폰을 눕혀서 보는 화면
+    const W = 428 + 32, H = 926 + 32;
+
+    // 상태바 시계는 지금 시각
+    const clock = document.getElementById('clock');
+    const tick = () => { const d = new Date(); clock.textContent = `${d.getHours() % 12 || 12}:${String(d.getMinutes()).padStart(2, '0')}`; };
+    tick(); setInterval(tick, 10000);
+
+    // 창 크기에 맞춰 폰 크기 조절, 가로 화면이면 폰을 시계 방향으로 눕힌다 (앱이 내용을 -90° 돌려 두었으므로)
+    let land = false;
+    function layout() {
+      const [w, h] = land ? [H, W] : [W, H];
+      const s = Math.min(1, (innerWidth - 48) / w, (innerHeight - 48) / h);
+      phone.style.setProperty('--s', s);
+      phone.style.setProperty('--r', land ? '90deg' : '0deg');
+    }
+    addEventListener('resize', layout);
+    layout();
+
+    // 앱 상태(현재 화면, 상태바 색)를 따라간다
+    const dark = (hex) => {
+      const m = /^#?([0-9a-f]{6})$/i.exec(hex || '');
+      if (!m) return false;
+      const n = parseInt(m[1], 16);
+      return (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) < 140;
+    };
+    let lastColor = null;
+    setInterval(() => {
+      let doc;
+      try { doc = frame.contentDocument; } catch { return; }
+      if (!doc) return;
+      const color = doc.querySelector('meta[name="theme-color"]')?.content;
+      if (color && color !== lastColor) {
+        lastColor = color;
+        screen.style.setProperty('--top', color);
+        screen.style.setProperty('--ink', dark(color) ? '#fff' : '#000');
+      }
+      const isLand = LAND.includes(doc.documentElement.dataset.screen);
+      if (isLand !== land) { land = isLand; layout(); }
+    }, 150);
+  </script>
+</body>
+</html>
