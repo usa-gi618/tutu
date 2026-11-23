@@ -19,6 +19,7 @@ import { create as createInteraction } from '../../js/interactions.js';
 import { createDoc } from '../../js/documentary.js';
 import { UI, ES } from '../../data/spanish.js';
 import { setTopColor, topColorOf } from '../../js/theme.js';
+import { createNarrator } from '../../js/narration.js';
 
 const SWIPE_PX = 40;
 const HOLD_MS = 400;  // 길게 누르기로 보는 시간
@@ -179,6 +180,7 @@ export default {
     // ---- 언어 (EN / ES) ----
     const es = ES[lecture.subject];
     const isEs = () => state.lang === 'es' && !!es;
+    const narrator = createNarrator(lecture.subject); // 강의 음성 (자막 줄마다)
     const ui = () => UI[isEs() ? 'es' : 'en'];
     const recapData = () => (isEs() && es.recap && lecture.recap
       ? { ...lecture.recap, ...es.recap, prediction: { ...lecture.recap.prediction, ...es.recap.prediction } }
@@ -408,6 +410,14 @@ export default {
       }
       if (frame < END) finishEl.classList.remove('show');
       updateSub();
+      narrator.sync({
+        segment: frame < END ? [...segments].reverse().find((x) => frame >= x.start) : null,
+        frame,
+        fr: lesson.fr,
+        lang: isEs() ? 'es' : 'en',
+        running: playing && rate === 1,
+        waiting: !!awaiting,
+      });
       timeText.textContent = `${clock(frame / lesson.fr)} / ${clock(END / lesson.fr)}`;
       scenes.forEach((s, i) => {
         const fill = bar.children[i].firstElementChild;
@@ -660,7 +670,7 @@ export default {
       segments = [...l.segments];
       if (lecture.recap) {
         scenes.push({ id: 'recap', start: videoEnd, end: END });
-        segments.push({ scene: 'recap', caption: lecture.recap.caption, start: videoEnd, end: END });
+        segments.push({ id: 'recap', scene: 'recap', caption: lecture.recap.caption, start: videoEnd, end: END });
       }
       bar.innerHTML = scenes.map((s) => `<div class="seg" style="flex:${s.end - s.start}"><i></i></div>`).join('');
       anim = lottie.loadAnimation({
@@ -698,6 +708,7 @@ export default {
     return () => {
       disposed = true;
       topShade.disconnect();
+      narrator.stop();
       cancelAnimationFrame(raf);
       clearTimeout(hideTimer);
       askTimers.forEach(clearTimeout);
