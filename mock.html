@@ -9,6 +9,10 @@
     // 폰·태블릿(터치)으로 열면 목업 없이 앱 그대로
     if (!matchMedia('(hover: hover) and (pointer: fine)').matches) location.replace('./');
   </script>
+  <script>
+    // 새로 올린 버전이 바로 보이게 (sw.js 참고)
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+  </script>
   <style>
     /* 컴퓨터용: 흰 배경 + 투투 로고(10%) 위에 iPhone 14 Plus 목업, 그 안에서 앱이 돈다 */
     * { box-sizing: border-box; margin: 0; padding: 0; }

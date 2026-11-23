@@ -18,6 +18,10 @@
       location.replace('mock.html');
     }
   </script>
+  <script>
+    // 새로 올린 버전이 바로 보이게 (sw.js 참고)
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+  </script>
   <link rel="stylesheet" href="css/base.css" />
   <link rel="stylesheet" href="screens/onboarding/onboarding.css" />
   <link rel="stylesheet" href="screens/home/home.css" />
