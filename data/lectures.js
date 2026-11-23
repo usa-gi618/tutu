@@ -19,7 +19,7 @@ export const TODAY = [
   {
     subject: 'Biology',
     title: 'Where Does a Tree’s Mass Come From?',
-    period: 'Period 0 : 56',
+    period: 'Period 4 : 12',
     motion: 'assets/lessons/tree_mass_lesson.json',
     length: '0:56',
     scenes: 6,
@@ -124,7 +124,7 @@ export const TODAY = [
   {
     subject: 'Algebra',
     title: 'Solving Linear Equations',
-    period: 'Period 0 : 38',
+    period: 'Period 3 : 24',
     motion: 'assets/lessons/linear_equations_lesson.json',
     length: '0:38',
     scenes: 5,
@@ -185,7 +185,7 @@ export const TODAY = [
   {
     subject: 'English 9',
     title: 'Romeo and Juliet',
-    period: 'Period 0 : 30',
+    period: 'Period 3 : 05',
     motion: 'assets/lessons/romeo_juliet_lesson.json',
     length: '0:30',
     scenes: 4,
@@ -234,7 +234,7 @@ export const TODAY = [
   {
     subject: 'History',
     title: 'The Industrial Revolution',
-    period: 'Period 1 : 08',
+    period: 'Period 4 : 48',
     motion: 'assets/lessons/industrial_revolution_lesson.json',
     length: '1:08',
     scenes: 7,
