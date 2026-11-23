@@ -145,13 +145,13 @@
   position: absolute;
   left: 4px;
   top: 3px;
-  width: 72px;
+  width: 62.5px;
   height: 40px;
   border-radius: 33px;
   background: #111;
   transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), width 0.25s ease;
 }
-.screen-player .lang-thumb.es { transform: translateX(72px); width: 53px; }
+.screen-player .lang-thumb.es { transform: translateX(62.5px); } /* EN·ES 같은 너비 */
 .screen-player .lang-btn {
   position: absolute;
   top: 3px;
@@ -163,8 +163,8 @@
   color: #fff;
   text-align: center;
 }
-.screen-player .lang-btn.en { left: 4px; width: 72px; }
-.screen-player .lang-btn.es { left: 76px; width: 53px; }
+.screen-player .lang-btn.en { left: 4px; width: 62.5px; }
+.screen-player .lang-btn.es { left: 66.5px; width: 62.5px; }
 
 /* 재생 / 일시정지 */
 .screen-player .toggle {
